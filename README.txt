@@ -1,11 +1,11 @@
-長照研究室－個管輔助小工具 V10
+長照研究室－個管輔助小工具 V12
 
-上傳 GitHub Pages 時，請將本資料夾內 6 個檔案全部放在 repository 根目錄：
+上傳 GitHub Pages 時，請保留資料夾結構：
 index.html
 style.css
 script.js
 serviceData.js
 logo.png
-README.txt
+assets/assistive/*.png
 
-本版不需要 assets 資料夾。
+本工具為個管實務輔助草稿，實際服務開立、額度、部分負擔與換證規定，仍以主管機關公告、照管平台核定及各縣市作業規範為準。
