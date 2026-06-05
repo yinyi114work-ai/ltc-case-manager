@@ -1,11 +1,114 @@
-<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>長照研究室－個管輔助小工具 V12</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="hero"><img src="logo.png" class="logo" alt="長照研究室 Logo"><h1>個管輔助小工具 V12</h1><p>額度計算｜全碼別速查｜民眾自付試算｜照顧計畫｜換證檢核｜電訪紀錄</p><small>資料基礎：115年度長期照顧服務申請及給付辦法附表；實際仍以主管機關、照管平台及各縣市公告為準。</small></header>
-<nav class="tabs"><button class="tab active" data-target="quota">額度計算器</button><button class="tab" data-target="codes">碼別介紹</button><button class="tab" data-target="copay">民眾自付試算</button><button class="tab" data-target="careplan">照顧計畫生成器</button><button class="tab" data-target="renewal">換證檢核器</button><button class="tab" data-target="phone">電訪輔助生成器</button></nav>
-<main>
-<section id="quota" class="panel active"><h2>額度計算器</h2><p class="hint">照顧及專業服務與交通接送會依開案日期比例計算；有外籍看護工時，照顧及專業服務額度為 30%，並顯示短照額度。</p><div class="card grid four"><label>長照等級<select id="qLevel"></select></label><label>開案日期<input type="date" id="qDate"></label><label>交通區域<select id="qTransport"></select></label><label>是否聘有外籍看護工<select id="qForeign"><option value="no">無外籍看護工</option><option value="yes">有外籍看護工</option></select></label></div><button class="primary" onclick="calcQuota()">計算額度</button><div id="quotaOut" class="quota-grid"></div></section>
-<section id="codes" class="panel"><h2>碼別介紹</h2><p class="hint">AA 碼移至輔具及居家無障礙後方；AA為照顧管理服務及政策鼓勵服務，免部分負擔且不扣長照給付額度。</p><div class="card"><input id="serviceSearch" placeholder="搜尋 BA07、AA01、輔具、喘息..." class="search"><div class="subtabs"><button class="subtab active" data-cat="care">照顧及專業/喘息</button><button class="subtab" data-cat="transport">交通接送</button><button class="subtab" data-cat="assist">輔具及居家無障礙</button><button class="subtab" data-cat="aa">AA照顧管理</button></div></div><div id="serviceList" class="service-list"></div></section>
-<section id="copay" class="panel"><h2>民眾自付試算</h2><p class="hint">可新增多個碼別與每月次數；若剩餘額度不足以支應一支服務，該支服務全額自費。</p><div class="card grid three"><label>CMS 等級<select id="feeCms"></select></label><label>身分別<select id="feeIdentity"><option value="first">第一類｜0%</option><option value="second">第二類</option><option value="third">第三類</option></select></label><button id="addFeeRow" class="primary smallbtn" type="button">＋新增碼別</button></div><div id="feeRows" class="fee-rows"></div><div class="result-grid"><div class="result"><span>預估使用額度</span><b id="feeTotal">$ 0</b></div><div class="result"><span>CMS可用額度</span><b id="feeQuota">$ 0</b></div><div class="result"><span>部分負擔</span><b id="feeSelfPay">$ 0</b></div><div class="result"><span>超額自費</span><b id="feeOverage">$ 0</b></div><div class="result hi"><span>預估自付總額</span><b id="feeClientTotal">$ 0</b></div><div class="result"><span>剩餘額度</span><b id="feeRemain">$ 0</b></div></div><div id="feeNotice" class="notice success"></div></section>
-<section id="careplan" class="panel"><h2>照顧計畫生成器</h2><p class="hint">依「個案摘述、照顧問題、照顧目標、照顧計畫、落差」格式產生；選單＋留白，適合新人快速整理。</p><div class="layout"><div class="formcol"><details open><summary>一、基本資料</summary><div class="grid two"><label>個案代稱<input id="cpName" placeholder="例如：案主/案父/案母"></label><label>訪視日期<input type="date" id="cpDate"></label><label>訪視時間<input type="time" id="cpTime"></label><label>共訪/討論對象<input id="cpPeople" placeholder="例如：案長子、居家督導"></label></div></details><details open><summary>二、個案狀況</summary><div id="cpChecks" class="checkGroups"></div><label>個案狀況補充<textarea id="cpHealthNote"></textarea></label></details><details><summary>三、家庭支持與照顧者</summary><div id="cpFamily" class="checkGroups"></div><textarea id="cpFamilyNote" placeholder="補充照顧模式、主要照顧者負荷、家庭支持等"></textarea></details><details><summary>四、環境與輔具評估</summary><div id="cpEnv" class="checkGroups"></div><textarea id="cpEnvNote" placeholder="補充住宅型態、動線、浴廁、現有輔具、是否需輔具中心評估等"></textarea></details><details><summary>五、照顧問題與目標</summary><div id="cpProblems" class="checkGroups"></div><div class="grid three"><label>短期目標<input id="cpGoalS" placeholder="1個月"></label><label>中期目標<input id="cpGoalM" placeholder="3個月"></label><label>長期目標<input id="cpGoalL" placeholder="6個月"></label></div></details><details><summary>六、照顧計畫</summary><textarea id="cpCare" placeholder="照顧及專業服務：例如 BA07 每週..."></textarea><textarea id="cpTransport" placeholder="交通接送：例如 DA01 至○○醫院回診；或無需求"></textarea><textarea id="cpAssist" placeholder="輔具及居家無障礙：例如 預約輔具中心評估..."></textarea><textarea id="cpRespite" placeholder="喘息/短照：例如 GA09*42，剩餘額度..."></textarea><textarea id="cpResource" placeholder="轉介其他資源"></textarea><textarea id="cpGap" placeholder="擬定計畫和實際使用服務的落差"></textarea></details><button class="primary" onclick="genCarePlan()">生成照顧計畫</button><button class="secondary" onclick="copyText('careplanOut')">複製</button></div><textarea id="careplanOut" class="out"></textarea></div></section>
-<section id="renewal" class="panel"><h2>換證檢核器</h2><p class="hint">依先前督導版邏輯移植：專業課程不另設固定點數；113/06/02前採舊制；115/07/01起網路課程最高採認80點。</p><div class="layout"><div class="formcol"><div class="card grid two"><label>小卡生效日<input id="renewStart" type="date"></label><label>小卡到期日<input id="renewEnd" type="date"></label><label>六年總積分<input id="renewTotal" type="number" step="0.5"></label><label>網路課程積分<input id="renewOnline" type="number" step="0.5"></label></div><details open><summary>舊制/原民/多元課程</summary><div id="cultureRows"></div><button type="button" class="secondary" onclick="addCultureRow()">＋新增課程</button></details><button class="primary" onclick="checkRenewal()">檢核</button><button class="secondary" onclick="copyText('renewalOut')">複製</button></div><textarea id="renewalOut" class="out"></textarea></div></section>
-<section id="phone" class="panel"><h2>電訪輔助生成器</h2><p class="hint">改為像問卷一樣用選單與 checkbox 勾選，不列全部碼別，不顯示談資文字。</p><div class="layout"><div class="formcol"><div class="card grid two"><label>電訪日期<input id="phDate" type="date"></label><label>電訪時間<input id="phTime" type="time"></label><label>聯繫方式<select id="phMethod"><option>電話</option><option>LINE</option><option>視訊</option><option>其他</option></select></label><label>聯繫對象<input id="phPerson" placeholder="例如：案女、案長子、案母"></label></div><div id="phoneChecks" class="checkGroups"></div><textarea id="phBodyNote" placeholder="個案體況補充"></textarea><textarea id="phServiceNote" placeholder="各項服務追蹤補充"></textarea><textarea id="phSatisNote" placeholder="滿意度或後續處置補充"></textarea><button class="primary" onclick="genPhone()">生成電訪紀錄</button><button class="secondary" onclick="copyText('phoneOut')">複製</button></div><textarea id="phoneOut" class="out"></textarea></div></section>
-</main><footer>© 長照研究室 LONG-TERM CARE LAB｜本工具為輔助草稿，請依最新法規與主管機關核定為準。</footer><script src="serviceData.js"></script><script src="script.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>長照研究室－個管輔助小工具 V13</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="hero">
+  <img src="logo.png" alt="長照研究室 Logo" class="logo" />
+  <h1>個管輔助小工具</h1>
+  <p>額度計算｜全碼別手冊｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助</p>
+  <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。</small>
+</header>
+<nav class="tabs">
+  <button class="tab active" data-target="quota">額度計算器</button>
+  <button class="tab" data-target="codes">碼別介紹</button>
+  <button class="tab" data-target="fee">民眾自付試算</button>
+  <button class="tab" data-target="careplan">照顧計畫生成器</button>
+  <button class="tab" data-target="renewal">換證檢核器</button>
+  <button class="tab" data-target="phone">電訪輔助生成器</button>
+</nav>
+<main class="container">
+<section id="quota" class="section active">
+  <h2>額度計算器</h2>
+  <div class="panel grid4">
+    <label>CMS等級<select id="qLevel"></select></label>
+    <label>開案日期<input id="qDate" type="date"></label>
+    <label>是否聘有外籍看護工<select id="qForeign"><option value="no">否</option><option value="yes">是</option></select></label>
+    <label>交通接送區域<select id="qTransport"></select></label>
+  </div>
+  <div id="quotaOut" class="quota-grid"></div>
+</section>
+<section id="codes" class="section">
+  <h2>碼別介紹</h2>
+  <p class="lead">保留支付基準說明、第一類/第二類/第三類金額、個管翻譯機與注意事項。輔具顯示「補助金額」：第一類100%、第二類90%、第三類70%。</p>
+  <div class="panel sticky-tools">
+    <input id="serviceSearch" placeholder="搜尋碼別或關鍵字，例如 BA07、沐浴、輪椅、GA09" />
+    <div class="subtabs">
+      <button class="subtab active" data-cat="care">照顧及專業/喘息</button>
+      <button class="subtab" data-cat="transport">交通接送</button>
+      <button class="subtab" data-cat="assist">輔具及無障礙</button>
+      <button class="subtab" data-cat="aa">AA照顧管理</button>
+    </div>
+  </div>
+  <div id="serviceList" class="service-list"></div>
+</section>
+<section id="fee" class="section">
+  <h2>民眾自付試算</h2>
+  <div class="panel grid3">
+    <label>CMS等級<select id="feeCms"></select></label>
+    <label>身分別<select id="feeIdentity"><option value="first">第一類</option><option value="second">第二類</option><option value="third">第三類</option></select></label>
+    <button id="addFeeRow" class="primary" type="button">＋新增碼別</button>
+  </div>
+  <div id="feeRows" class="fee-rows"></div>
+  <div class="result-grid">
+    <div class="result"><span>預估使用額度</span><b id="feeTotal">$0</b></div>
+    <div class="result"><span>CMS可用額度</span><b id="feeQuota">$0</b></div>
+    <div class="result"><span>部分負擔</span><b id="feeSelfPay">$0</b></div>
+    <div class="result"><span>超額自費</span><b id="feeOverage">$0</b></div>
+    <div class="result highlight"><span>預估自付總額</span><b id="feeClientTotal">$0</b></div>
+    <div class="result"><span>剩餘額度</span><b id="feeRemain">$0</b></div>
+  </div>
+  <div id="feeNotice" class="notice success">尚未超出 CMS 額度。</div>
+</section>
+<section id="careplan" class="section">
+  <h2>照顧計畫生成器</h2>
+  <p class="lead">輸入集中在上方；生成結果在最下方。格式依照你提供的照顧計畫範例。</p>
+  <div class="panel">
+    <h3>一、基本資料</h3>
+    <div class="grid4">
+      <label>個案姓名/代稱<input id="cpName"></label>
+      <label>家訪日期<input id="cpDate" type="date"></label>
+      <label>家訪時間<input id="cpTime" type="time"></label>
+      <label>討論對象<input id="cpPeople" placeholder="例：案女、案長子、個案本人"></label>
+    </div>
+    <h3>二、個案狀況</h3><div id="cpChecks" class="input-groups"></div><label>個案狀況補充<textarea id="cpHealthNote"></textarea></label>
+    <h3>三、家庭支持與照顧者</h3><div id="cpFamily" class="input-groups"></div><label>家庭支持補充<textarea id="cpFamilyNote"></textarea></label>
+    <h3>四、環境與輔具評估</h3><div id="cpEnv" class="input-groups"></div><label>環境與輔具補充<textarea id="cpEnvNote"></textarea></label>
+    <h3>五、照顧問題與目標</h3><div id="cpProblems" class="input-groups"></div>
+    <div class="grid3"><label>短期目標<input id="cpGoalS"></label><label>中期目標<input id="cpGoalM"></label><label>長期目標<input id="cpGoalL"></label></div>
+    <h3>六、照顧計畫</h3>
+    <div class="grid2"><label>照顧及專業服務<textarea id="cpCare"></textarea></label><label>交通接送<textarea id="cpTransport"></textarea></label><label>輔具及無障礙<textarea id="cpAssist"></textarea></label><label>喘息/短照<textarea id="cpRespite"></textarea></label><label>轉介其他資源<textarea id="cpResource"></textarea></label><label>擬定計畫和實際使用服務的落差<textarea id="cpGap"></textarea></label></div>
+    <button id="genCarePlan" class="primary" type="button">生成照顧計畫</button>
+  </div>
+  <h3 class="output-title">生成結果</h3><textarea id="careplanOut" class="big-output"></textarea><button onclick="copyText('careplanOut')" class="secondary" type="button">複製照顧計畫</button>
+</section>
+<section id="renewal" class="section">
+  <h2>長照小卡換證檢核器</h2>
+  <div class="panel">
+    <div class="grid4"><label>小卡生效日<input id="renewStart" type="date"></label><label>小卡到期日<input id="renewEnd" type="date"></label><label>六年總積分<input id="renewTotal" type="number" step="0.5"></label><label>網路課程積分<input id="renewOnline" type="number" step="0.5"></label></div>
+    <div class="grid4"><label>專業品質<input id="rq" type="number" step="0.5"></label><label>專業倫理<input id="re" type="number" step="0.5"></label><label>專業法規<input id="rl" type="number" step="0.5"></label><label>消防/緊急/感染/性別合計<input id="rsafe" type="number" step="0.5"></label></div>
+    <h3>原民／多元課程</h3><div id="cultureRows"></div><button id="addCulture" class="secondary" type="button">＋新增課程</button>
+    <button id="checkRenewal" class="primary" type="button">檢核換證資格</button>
+  </div>
+  <h3 class="output-title">檢核結果</h3><textarea id="renewalOut" class="big-output"></textarea><button onclick="copyText('renewalOut')" class="secondary" type="button">複製結果</button>
+</section>
+<section id="phone" class="section">
+  <h2>電訪輔助生成器</h2>
+  <p class="lead">以問卷/checkbox方式選擇本次電訪內容；不列全部碼別。</p>
+  <div class="panel">
+    <div class="grid4"><label>電訪日期<input id="phDate" type="date"></label><label>電訪時間<input id="phTime" type="time"></label><label>聯繫方式<select id="phMethod"><option>電話</option><option>LINE</option><option>視訊</option><option>其他</option></select></label><label>聯繫對象<input id="phPerson" placeholder="例：案女、案長子、案母"></label></div>
+    <h3>本次電訪主題</h3><div id="phoneChecks" class="input-groups"></div>
+    <div class="grid3"><label>個案體況補充<textarea id="phBodyNote"></textarea></label><label>服務追蹤補充<textarea id="phServiceNote"></textarea></label><label>滿意度/後續處置<textarea id="phSatisNote"></textarea></label></div>
+    <button id="genPhone" class="primary" type="button">生成電訪紀錄</button>
+  </div>
+  <h3 class="output-title">生成結果</h3><textarea id="phoneOut" class="big-output"></textarea><button onclick="copyText('phoneOut')" class="secondary" type="button">複製電訪紀錄</button>
+</section>
+</main>
+<footer>© 長照研究室 LONG-TERM CARE LAB｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
+<script src="serviceData.js"></script><script src="script.js"></script>
+</body>
+</html>
