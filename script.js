@@ -1,47 +1,202 @@
 const $ = id => document.getElementById(id);
-const today = () => new Date().toISOString().slice(0,10);
-function toast(msg){const old=document.querySelector('.copy-toast'); if(old) old.remove(); const t=document.createElement('div'); t.className='copy-toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),1700)}
-async function copyFrom(id,label='內容'){const el=$(id); if(!el) return; if(!el.value && el.textContent) el.value=el.textContent; try{await navigator.clipboard.writeText(el.value || el.textContent); toast(`已複製${label}`)}catch(e){el.focus?.(); el.select?.(); document.execCommand('copy'); toast(`已複製${label}`)}}
-function roc(dateStr){ if(!dateStr) return '○年○月○日'; const [y,m,d]=dateStr.split('-').map(Number); return y?`${y-1911}年${m}月${d}日`:dateStr; }
-function fillLevels(){ const opts=Object.keys(cmsLevels).map(l=>`<option value="${l}">第${l}級｜${money(cmsLevels[l])}元/月</option>`).join(''); ['quotaLevel','planLevel'].forEach(id=>{if($(id)) $(id).innerHTML=opts}); }
-function initTabs(){document.querySelectorAll('.tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tool').forEach(s=>s.classList.remove('active'));btn.classList.add('active');$(btn.dataset.target)?.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}));}
+const money = n => (Math.floor(Number(n) || 0)).toLocaleString('zh-TW');
+let currentCodeCat = 'care';
 
-function daysInMonth(d){return new Date(d.getFullYear(),d.getMonth()+1,0).getDate()}
-function firstMonthAmount(amount,dateStr){ if(!dateStr) return amount; const d=new Date(dateStr+'T00:00:00'); if(isNaN(d)) return amount; const total=daysInMonth(d); const remain=total-d.getDate()+1; return Math.floor(amount*remain/total); }
-function initQuota(){ $('openDate').value=today(); ['quotaLevel','openDate','foreignWorker'].forEach(id=>$(id)?.addEventListener('input',calcQuota)); calcQuota(); }
-function calcQuota(){ const level=$('quotaLevel').value||2; const open=$('openDate').value; const foreign=$('foreignWorker').value==='yes'; const base=cmsLevels[level]; const careBase=foreign?Math.floor(base*0.3):base; const careFirst=firstMonthAmount(careBase,open); const transportFirst=Object.fromEntries(Object.entries(transportLimits).map(([k,v])=>[k,firstMonthAmount(v,open)])); const respite=respiteLimits(level); const short=shortStayForeignLimits(level); const result=$('quotaResult'); result.innerHTML=`
-  <div class="quota-card card ${foreign?'foreign':''}"><h3>照顧及專業服務</h3><strong>${money(careFirst)}</strong><small>${open?`首月比例：${roc(open)}開案起算。`:''}${foreign?'｜已依外籍看護工規定採照顧及專業服務額度30%。':''}</small></div>
-  <div class="quota-card card"><h3>交通接送服務</h3><div class="transport-table">${Object.entries(transportFirst).map(([k,v],i)=>`<div class="transport-cell">${['第一區','第二區','第三區','第四區'][i]}<b>${money(v)}</b></div>`).join('')}</div><small>此處為交通接送月額度之首月比例；單趟支付由地方主管機關公告。</small></div>
-  <div class="quota-card card"><h3>輔具及居家無障礙</h3><strong>${money(assistiveLimits.group1)}</strong><small>第一組三年額度；第二組為 ${money(assistiveLimits.group2)} 元／三年，依規定擇一申請。</small></div>
-  <div class="quota-card card"><h3>喘息服務</h3><strong>${money(respite)}</strong><small>一年額度：第2至6級 ${money(32340)} 元；第7至8級 ${money(48510)} 元。</small></div>
-  ${foreign?`<div class="quota-card card foreign"><h3>外籍看護工家庭短照服務</h3><strong>${money(short)}</strong><small>外看家庭適用：第2至6級 ${money(87780)} 元；第7至8級 ${money(71610)} 元。</small></div>`:''}`; }
+function rateFor(service, identity){
+  if(identity === 'first') return 0;
+  const r = RATES[service.rateGroup] || RATES.care;
+  return identity === 'second' ? r.second : r.third;
+}
+function selfPay(service, identity){ return Math.floor(service.price * rateFor(service, identity)); }
+function val(id){ return ($(id)?.value || '').trim(); }
+function num(id){ return Number($(id)?.value) || 0; }
+function roc(s){ if(!s) return '○年○月○日'; const [y,m,d]=s.split('-').map(Number); return `${y-1911}年${m}月${d}日`; }
+function checkItem(x, checked=false){ return `<label class="check-item"><input type="checkbox" value="${x}" ${checked?'checked':''}><span>${x}</span></label>`; }
+function checkedVals(id){ return Array.from(document.querySelectorAll(`#${id} input:checked`)).map(x=>x.value); }
 
-let activeGroup='care';
-function initCodeTool(){ const tabs=$('codeCategoryTabs'); tabs.innerHTML=codeGroups.map(g=>`<button class="pill ${g.key===activeGroup?'active':''}" data-group="${g.key}">${g.label}</button>`).join(''); tabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{activeGroup=b.dataset.group; tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderCodes();})); $('codeSearch').addEventListener('input',renderCodes); renderCodes(); }
-function selfPayCells(item){ const rate=ratesByType[item.type] || ratesByType.care; if(item.code==='DA01') return `<div class="transport-table"><div class="transport-cell">第一區月額度<b>${money(1680)}</b></div><div class="transport-cell">第二區月額度<b>${money(1840)}</b></div><div class="transport-cell">第三區月額度<b>${money(2000)}</b></div><div class="transport-cell">第四區月額度<b>${money(2400)}</b></div></div><div class="mini-table"><div class="mini-cell"><span>第一類</span><strong>0</strong></div><div class="mini-cell"><span>第二類 9%</span><strong>依實際車資</strong></div><div class="mini-cell"><span>第三類 27%</span><strong>依實際車資</strong></div></div>`;
- const price = item.price ?? item.rent ?? 0; const labelSecond = item.type==='free'?'0%':`${Math.round(rate.second*100)}%`; const labelThird = item.type==='free'?'0%':`${Math.round(rate.third*100)}%`; return `<div class="mini-table"><div class="mini-cell"><span>支付/上限</span><strong>${price?money(price):'依公告'}</strong></div><div class="mini-cell"><span>第二類 ${labelSecond}</span><strong>${price?money(floorMoney(price,rate.second)):'依公告'}</strong></div><div class="mini-cell"><span>第三類 ${labelThird}</span><strong>${price?money(floorMoney(price,rate.third)):'依公告'}</strong></div></div>`; }
-function renderCodes(){ const q=($('codeSearch').value||'').trim().toLowerCase(); let list=allCodes.filter(x=>{ if(activeGroup==='care') return ['care','respite','free'].includes(x.type) && x.code!=='DA01'; if(activeGroup==='transport') return x.type==='transport'; if(activeGroup==='assistive') return x.type==='assistive'; }); if(q) list=list.filter(x=>[x.code,x.name,x.category,x.desc,x.note,x.plain].join(' ').toLowerCase().includes(q)); $('codeList').innerHTML=list.map(x=>`<article class="code-card"><h3>${x.code}｜${x.name}</h3><div class="tag-row"><span class="tag">${x.category}</span><span class="tag">${ratesByType[x.type]?.label||''}</span><span class="tag">${x.unit||''}</span></div>${x.img?`<div class="aid-img"><img src="assets/${x.img}.svg" alt="${x.name}示意圖"></div>`:''}${selfPayCells(x)}<p><b>內容摘要：</b>${x.desc}</p><p><b>注意事項：</b>${x.note}</p><div class="plain"><b>個管白話：</b>${x.plain}</div></article>`).join('') || '<div class="card">查無符合項目。</div>'; }
+function initTabs(){
+  document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active'); $(btn.dataset.target).classList.add('active');
+  }));
+  document.querySelectorAll('.subtab').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active'); currentCodeCat = btn.dataset.cat; renderCodes();
+  }));
+}
 
-function serviceOptions(){return feeSelectable.map(s=>`<option value="${s.code}">${s.code} ${s.name}</option>`).join('')}
-function addFeeRow(code='BA20',qty=1){const div=document.createElement('div'); div.className='fee-row'; div.innerHTML=`<label>碼別<select class="fee-code">${serviceOptions()}</select></label><label>數量<input class="fee-qty" type="number" min="0" step="0.5" value="${qty}"></label><button class="remove" type="button">刪除</button>`; div.querySelector('.fee-code').value=code; div.querySelectorAll('select,input').forEach(el=>el.addEventListener('input',calcFee)); div.querySelector('.remove').addEventListener('click',()=>{div.remove();calcFee()}); $('feeRows').appendChild(div); calcFee();}
-function itemAmount(item){ if(item.code==='DA01') return 0; return Number(item.price ?? item.rent ?? 0); }
-function calcFee(){ const identity=$('feeIdentity').value; let total=0,self=0; document.querySelectorAll('.fee-row').forEach(row=>{const code=row.querySelector('.fee-code').value; const qty=Number(row.querySelector('.fee-qty').value||0); const item=feeSelectable.find(x=>x.code===code); if(!item) return; const amount=itemAmount(item)*qty; total+=amount; const rate=identity==='first'?0:(ratesByType[item.type]?.[identity]??0); self+=Math.floor(amount*rate);}); $('feePayTotal').textContent=money(total); $('feeSelfTotal').textContent=money(self);}
-function initFee(){ $('addFeeRow').addEventListener('click',()=>addFeeRow()); $('feeIdentity').addEventListener('change',calcFee); addFeeRow('BA20',8); }
+function prorate(amount, dateStr){
+  if(!dateStr) return {amount, days:null, total:null};
+  const d = new Date(dateStr + 'T00:00:00');
+  const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+  const total = new Date(y, m, 0).getDate();
+  const days = total - day + 1;
+  return { amount: Math.round(amount * days / total), days, total };
+}
+function initQuota(){
+  $('qLevel').innerHTML = Object.entries(CMS).map(([k,v])=>`<option value="${k}">第${k}級｜${money(v)}元/月</option>`).join('');
+  ['qLevel','qDate','qForeign'].forEach(id=>$(id).addEventListener('change', calcQuota));
+  calcQuota();
+}
+function calcQuota(){
+  const level = $('qLevel').value || 2;
+  const foreign = $('qForeign').value === 'yes';
+  const date = $('qDate').value;
+  const monthly = CMS[level];
+  const careMonthly = foreign ? Math.floor(monthly * 0.7) : monthly;
+  const careP = prorate(careMonthly, date);
+  const transportCards = Object.entries(TRANSPORT_QUOTA).map(([zone, amount])=>{
+    const p = prorate(amount, date);
+    return `<div class="quota-card"><span>交通接送｜第${zone}區</span><b>${money(amount)}元/月</b><small>${date ? `首月約 ${money(p.amount)} 元（${p.days}/${p.total}天）` : '輸入開案日期可計算首月比例'}</small></div>`;
+  }).join('');
+  const respite = Number(level) >= 7 ? 48510 : 32340;
+  const shortStay = Number(level) >= 7 ? 71610 : 87780;
+  $('quotaOut').innerHTML = `
+    <div class="quota-card"><span>照顧及專業服務</span><b>${money(careMonthly)}元/月</b><small>${foreign ? '已套用外看70%額度。' : ''}${date ? `首月約 ${money(careP.amount)} 元（${careP.days}/${careP.total}天）` : '輸入開案日期可計算首月比例'}</small></div>
+    ${transportCards}
+    <div class="quota-card"><span>輔具及居家無障礙</span><b>40,000元</b><small>三年額度，依評估與補助規定辦理</small></div>
+    <div class="quota-card"><span>喘息服務</span><b>${money(respite)}元/年</b><small>${Number(level)>=7?'第7–8級':'第2–6級'}</small></div>
+    ${foreign ? `<div class="quota-card"><span>外看短照服務</span><b>${money(shortStay)}元/年</b><small>${Number(level)>=7?'第7–8級':'第2–6級'}，聘有外籍看護工者適用</small></div>` : ''}`;
+}
 
-const problemOptions=['身體清潔需協助','沐浴安全疑慮','進食或營養需追蹤','移位／上下樓困難','居家環境有跌倒風險','主要照顧者負荷','社會參與不足','就醫交通需協助','管路或傷口照護需指導','失智或困擾行為需追蹤'];
-function checkItem(label,id,val){return `<label class="check-item"><input type="checkbox" id="${id}" value="${val||label}"><span>${label}</span></label>`}
-function initCarePlan(){ $('planDate').value=today(); $('problemChecks').innerHTML=problemOptions.map((x,i)=>checkItem(x,`prob_${i}`)).join(''); $('planServiceChecks').innerHTML=allCodes.filter(x=>['BA','BB','BC','BD','CA','CB','CC','CD','DA','GA'].some(p=>x.code.startsWith(p))).map(x=>checkItem(`${x.code} ${x.name}`,`planSvc_${x.code}`,`${x.code}${x.name}`)).join(''); $('generatePlan').addEventListener('click',generatePlan); $('copyPlan').addEventListener('click',()=>copyFrom('planOutput','照顧計畫')); $('clearPlan').addEventListener('click',()=>document.querySelectorAll('#carePlanTool input,#carePlanTool textarea').forEach(x=>{if(x.type==='checkbox')x.checked=false;else x.value=''})); }
-function checked(container){return Array.from(document.querySelectorAll(`#${container} input:checked`)).map(x=>x.value)}
-function generatePlan(){ const probs=checked('problemChecks'); const svcs=checked('planServiceChecks'); const text=`一、訪視日期與參與者\n訪視日期：${roc($('planDate').value)}\n參與者：${$('planPeople').value||'未填寫'}\n個案：${$('planCase').value||'案主'}（CMS第${$('planLevel').value}級）\n\n二、個案摘述\n${$('planSummary').value||'請補充個案疾病、身體功能、生活自理及近期變化。'}\n\n三、主要照顧者與家庭支持\n${$('planCaregiver').value||'請補充主要照顧者、家庭支持與照顧壓力情形。'}\n\n四、主要照顧問題\n${probs.length?probs.map((p,i)=>`${i+1}. ${p}`).join('\n'):'1. 尚未勾選主要照顧問題。'}${$('planProblemNote').value?`\n補充：${$('planProblemNote').value}`:''}\n\n五、計畫目標\n短期目標：協助個案於日常生活中獲得必要照顧支持，降低照顧風險。\n中期目標：維持個案身體功能與居家安全，減輕主要照顧者照顧負荷。\n長期目標：促進個案在熟悉環境中穩定生活，維持生活品質與家庭照顧量能。\n\n六、服務安排\n${svcs.length?svcs.map((s,i)=>`${i+1}. ${s}`).join('\n'):'尚未勾選服務碼別。'}${$('planServiceNote').value?`\n補充：${$('planServiceNote').value}`:''}\n\n七、後續追蹤\n後續將持續追蹤個案體況、服務使用情形、家屬滿意度及照顧需求變化，必要時辦理照顧計畫調整或轉介相關資源。`; $('planOutput').value=text; }
+function initCodes(){ $('codeSearch').addEventListener('input', renderCodes); renderCodes(); }
+function renderAidVisual(s){
+  if(s.cat !== 'assistive') return '';
+  const cls = s.visualClass || 'aid-generic';
+  return `<div class="aid-photo ${cls}"><div class="aid-title">${s.name}</div><div class="aid-object"></div><div class="aid-caption">${s.visualText || '輔具示意圖'}</div></div>`;
+}
+function renderCodes(){
+  const q = ($('codeSearch').value || '').trim().toLowerCase();
+  const list = SERVICE_DATA.filter(s => s.cat === currentCodeCat && [s.code,s.name,s.group,s.desc,s.note,s.talk,s.visualText].join(' ').toLowerCase().includes(q));
+  $('codeList').innerHTML = list.map(s=>`
+    <article class="service-card ${s.cat==='assistive'?'assist-card':''}">
+      ${renderAidVisual(s)}
+      <h3>${s.code}｜${s.name}</h3>
+      <p><span class="tag">${s.group}</span><span class="tag">${money(s.price)}元／${s.unit}</span></p>
+      <div class="price-grid"><div><span>支付價格</span><b>${money(s.price)}</b></div><div><span>第二類自付</span><b>${money(selfPay(s,'second'))}</b></div><div><span>第三類自付</span><b>${money(selfPay(s,'third'))}</b></div></div>
+      <p><b>內容：</b>${s.desc}</p>
+      ${s.talk ? `<div class="talk"><b>個管翻譯機：</b>${s.talk}</div>` : ''}
+      <p><b>注意：</b>${s.note || '依支付基準及實際評估結果辦理。'}</p>
+    </article>`).join('') || '<div class="card">查無符合項目。</div>';
+}
 
-function initRenewal(){ $('addCulture').addEventListener('click',()=>addCultureRow()); $('checkRenewal').addEventListener('click',checkRenewal); $('copyRenewal').addEventListener('click',()=>copyFrom('renewOutput','檢核結果')); $('clearRenewal').addEventListener('click',()=>{document.querySelectorAll('#renewalTool input,#renewalTool textarea').forEach(x=>x.value=''); $('cultureRows').innerHTML=''; $('renewSummary').className='notice'; $('renewSummary').textContent='請輸入資料後檢核。'; $('renewOutput').value='';}); addCultureRow(); }
-function addCultureRow(){ const div=document.createElement('div'); div.className='culture-row'; div.innerHTML=`<label>課程日期<input class="cul-date" type="date"></label><label>課程類別<select class="cul-type"><option value="indigenous">原民文化</option><option value="diverse">多元文化</option><option value="old">舊制／多元文化族群</option></select></label><label>點數<input class="cul-point" type="number" step="0.5" min="0" value="1"></label><button class="remove" type="button">刪除</button>`; div.querySelector('.remove').addEventListener('click',()=>div.remove()); $('cultureRows').appendChild(div); }
-function num(id){return Number($(id).value||0)}
-function checkRenewal(){ const msgs=[]; let ok=true; const total=num('renewTotal'), online=num('renewOnline'); if(total<120){ok=false;msgs.push(`總積分不足120點，目前${total}點。`)} else msgs.push(`總積分已達120點，目前${total}點。`); if(online>80){ok=false;msgs.push(`網路課程超過80點採認上限，目前${online}點。`)} else msgs.push(`網路課程${online}點。`); const q=num('renewQuality'), e=num('renewEthics'), l=num('renewLaw'), qel=q+e+l; if(qel<24||q===0||e===0||l===0){ok=false;msgs.push(`專業品質／倫理／法規未達標：合計${qel}點，且三項皆需有點數。`)} else msgs.push(`專業品質／倫理／法規合計${qel}點，初步符合。`); const four=num('renewFire')+num('renewEmergency')+num('renewInfection')+num('renewGender'); if(four<10||['renewFire','renewEmergency','renewInfection','renewGender'].some(id=>num(id)===0)){ok=false;msgs.push(`消防／緊急／感染／性別未達標：合計${four}點，四項皆需有點數。`)} else msgs.push(`消防／緊急／感染／性別合計${four}點，初步符合。`);
- const cutoff=new Date('2024-06-03T00:00:00'); let oldPts=0, post={}; document.querySelectorAll('.culture-row').forEach(r=>{const d=r.querySelector('.cul-date').value; const type=r.querySelector('.cul-type').value; const p=Number(r.querySelector('.cul-point').value||0); if(!d) return; const dt=new Date(d+'T00:00:00'); if(dt<cutoff){ if(type==='old') oldPts+=p; } else { const y=dt.getFullYear(); post[y]??={indigenous:0,diverse:0}; if(type==='indigenous'||type==='diverse') post[y][type]+=p; }}); if(oldPts>0&&oldPts<2){ok=false;msgs.push(`113/06/02以前舊制／多元文化族群未達2點，目前${oldPts}點。`)} if(oldPts>=2) msgs.push(`113/06/02以前舊制／多元文化族群${oldPts}點，初步符合。`); Object.entries(post).forEach(([y,v])=>{ if(v.indigenous<1||v.diverse<1){ok=false;msgs.push(`${y}年度原民／多元未達標：原民${v.indigenous}點、多元${v.diverse}點。`)} else msgs.push(`${y}年度原民／多元初步符合：原民${v.indigenous}點、多元${v.diverse}點。`);}); if(!Object.keys(post).length && oldPts===0){msgs.push('尚未輸入原民／多元課程資料，請補充後再判斷。');}
- const summary=$('renewSummary'); summary.className='notice '+(ok?'ok':'bad'); summary.textContent=ok?'初步檢核：符合主要條件。':'初步檢核：尚有項目需補足。'; $('renewOutput').value=`長照小卡換證檢核結果\n小卡效期：${roc($('renewStart').value)}至${roc($('renewEnd').value)}\n\n${msgs.map(x=>'・'+x).join('\n')}\n\n提醒：本工具為初步檢核，實際仍請以主管機關、訓練認證系統與最新規定為準。`; }
+function serviceOptions(){ return SERVICE_DATA.filter(s => s.cat === 'care' && s.rateGroup !== 'professional' || s.cat === 'care' && s.rateGroup === 'professional').map(s=>`<option value="${s.code}">${s.code} ${s.name}｜${money(s.price)}元/${s.unit}</option>`).join(''); }
+function initCopay(){
+  $('cpLevel').innerHTML = Object.entries(CMS).map(([k,v])=>`<option value="${k}">CMS ${k}｜${money(v)}元</option>`).join('');
+  ['cpLevel','cpIdentity'].forEach(id=>$(id).addEventListener('change', calcCopay));
+  addCopayRow('BA07', 4);
+}
+function addCopayRow(code='BA20', count=1){
+  const div = document.createElement('div'); div.className = 'fee-row';
+  div.innerHTML = `<label>碼別<select class="cpCode">${serviceOptions()}</select></label><label>每月次數<input class="cpCount" type="number" min="0" step="1" value="${count}"></label><button class="remove" type="button">刪除</button>`;
+  div.querySelector('.cpCode').value = code;
+  div.querySelector('.cpCode').addEventListener('change', calcCopay);
+  div.querySelector('.cpCount').addEventListener('input', calcCopay);
+  div.querySelector('.remove').addEventListener('click',()=>{div.remove(); calcCopay();});
+  $('copayRows').appendChild(div); calcCopay();
+}
+function calcCopay(){
+  const identity = $('cpIdentity').value;
+  let quota = CMS[$('cpLevel').value] || 0;
+  let remain = quota, total = 0, covered = 0, self = 0, over = 0;
+  const lines = [];
+  document.querySelectorAll('#copayRows .fee-row').forEach(row=>{
+    const code = row.querySelector('.cpCode').value;
+    const count = Number(row.querySelector('.cpCount').value) || 0;
+    const s = SERVICE_DATA.find(x=>x.code===code); if(!s) return;
+    for(let i=1;i<=count;i++){
+      total += s.price;
+      if(remain >= s.price){
+        remain -= s.price; covered += s.price;
+        const sp = selfPay(s, identity); self += sp;
+        lines.push(`${s.code} ${s.name} 第${i}支：額度內，支付${money(s.price)}元，自付${money(sp)}元。`);
+      }else{
+        over += s.price; self += s.price;
+        lines.push(`${s.code} ${s.name} 第${i}支：剩餘額度${money(remain)}元不足以支應一支服務，整支自費${money(s.price)}元。`);
+      }
+    }
+  });
+  $('cpTotal').textContent = money(total); $('cpQuotaShow').textContent = money(quota); $('cpSelfPay').textContent = money(self - over); $('cpOverage').textContent = money(over); $('cpClientTotal').textContent = money(self); $('cpRemain').textContent = money(remain);
+  const notice = $('copayNotice');
+  if(over > 0){ notice.className = 'notice-card danger'; notice.textContent = `⚠️ 已超出 CMS 額度，超額自費 ${money(over)} 元；預估自付總額 ${money(self)} 元。`; }
+  else { notice.className = 'notice-card success'; notice.textContent = `✅ 目前尚未超出 CMS 額度，剩餘額度 ${money(remain)} 元；預估自付總額 ${money(self)} 元。`; }
+  $('copayDetail').value = lines.join('\n') || '尚未加入服務。';
+}
 
-function initPhone(){ $('phoneDate').value=today(); $('phoneServiceChecks').innerHTML=allCodes.filter(x=>['BA','BB','BC','BD','CA','CB','CC','CD','DA','GA'].some(p=>x.code.startsWith(p))).map(x=>checkItem(`${x.code} ${x.name}`,`phoneSvc_${x.code}`,`${x.code}${x.name}`)).join(''); $('generatePhone').addEventListener('click',generatePhone); $('copyPhone').addEventListener('click',()=>copyFrom('phoneOutput','電訪紀錄')); $('clearPhone').addEventListener('click',()=>document.querySelectorAll('#phoneTool input,#phoneTool textarea').forEach(x=>{if(x.type==='checkbox')x.checked=false;else x.value=''})); }
-function generatePhone(){ const svcs=checked('phoneServiceChecks'); const txt=`電訪紀錄\n日期：${roc($('phoneDate').value)}${$('phoneTime').value?` ${$('phoneTime').value}`:''}\n聯繫方式：${$('phoneMethod').value}\n聯繫對象：${$('phoneTarget').value||'未填寫'}\n\n一、個案體況追蹤\n本次聯繫追蹤個案體況，聯繫對象表示個案目前${$('phoneHealth').value}，${$('phoneMood').value}。${$('phoneHealthNote').value?`補充說明：${$('phoneHealthNote').value}`:'暫無其他特殊體況反映。'}\n\n二、各項服務追蹤\n目前追蹤服務項目：${svcs.length?svcs.join('、'):'未勾選特定服務項目'}。${$('phoneServiceNote').value?`服務使用情形：${$('phoneServiceNote').value}`:'聯繫對象未反映服務執行異常。'}\n\n三、服務滿意度\n聯繫對象表示目前服務滿意度為「${$('phoneSatisfaction').value}」。服務調整需求：${$('phoneAdjust').value}。\n\n四、後續處理\n${$('phoneExtra').value?$('phoneExtra').value:'後續持續追蹤個案體況、各項服務使用情形及家屬滿意度，如有服務需求變化再進行照顧計畫調整。'}`; $('phoneOutput').value=txt; }
+function initCarePlan(){
+  const today = new Date(); $('cpVisitDate').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const probs = ['行走問題','移位問題','上下樓梯問題','身體清潔或沐浴問題','進食／備餐問題','如廁與排泄問題','就醫或外出問題','居家環境安全問題','輔具或無障礙需求','主要照顧者負荷','營養／吞嚥／護理需求','社會參與不足','喘息或短照需求'];
+  $('problemList').innerHTML = probs.map(x=>checkItem(x)).join('');
+  const plans = ['照顧及專業服務','交通接送服務','輔具及居家無障礙改善服務','喘息服務／短照服務','轉介其他資源','AA08／AA09原因說明'];
+  $('planItems').innerHTML = plans.map(x=>checkItem(x)).join('');
+}
+function generateCarePlan(){
+  const problems = checkedVals('problemList').slice(0,5);
+  const planItems = checkedVals('planItems');
+  const intro = `本案於${roc(val('cpVisitDate'))}家訪，與${val('cpParticipants') || '個案及家屬'}討論照顧計畫。`;
+  const summary = `1. 個案狀況：個案主要疾病／失能原因為${val('cpDisease')}，${val('cpRecent')}，目前${val('cpWalk')}，${val('cpADL')}。案家期待為${val('cpExpectation')}。${val('cpBodyNote') ? '補充說明：' + val('cpBodyNote') : ''}${val('cpExpectationNote') ? '案家期待補充：' + val('cpExpectationNote') : ''}\n2. 主要照顧者評估：個案目前${val('cpLive')}，主要照顧者為${val('cpCaregiver')}，${val('cpBurden')}，${val('cpSupport')}。${val('cpFamilyNote') ? '補充說明：' + val('cpFamilyNote') : ''}\n3. 環境與輔具評估：${val('cpEnv')}，${val('cpAid')}。${val('cpEnvNote') ? '補充說明：' + val('cpEnvNote') : ''}`;
+  const probText = problems.length ? problems.map((p,i)=>`${i+1}. ${p}：${i===0 && val('cpProblemNote') ? val('cpProblemNote') : '依本次訪視評估，需納入照顧計畫追蹤。'}`).join('\n') : `1. 請依實際評估補充前5項照顧問題。${val('cpProblemNote') ? '\n補充：' + val('cpProblemNote') : ''}`;
+  const exec = [];
+  if(planItems.includes('照顧及專業服務')) exec.push(`一、照顧及專業服務：${val('cpCareServiceNote') || '依個案問題清單及照顧需求，核定合適之照顧及專業服務，並敘明服務頻率、內容與目標。'}`);
+  if(planItems.includes('交通接送服務')) exec.push('二、交通接送服務：依個案就醫、復健或洗腎等固定外出需求，說明交通接送使用目的、地點及預約方式。');
+  if(planItems.includes('輔具及居家無障礙改善服務')) exec.push('三、輔具及居家無障礙環境改善服務：依個案行動、移位、沐浴、如廁及居家動線安全需求，評估輔具或無障礙改善；如轉介輔具中心或二手輔具資源，應同時敘明。');
+  if(planItems.includes('喘息服務／短照服務')) exec.push('四、喘息服務／短照服務：依主要照顧者負荷與家庭照顧安排，評估居家、社區、機構喘息或外看短照服務，並追蹤額度與使用情形。');
+  if(planItems.includes('轉介其他資源')) exec.push('五、轉介其他資源：視需求連結家庭照顧者支持、失智社區服務據點、巷弄長照站、餐飲服務、緊急救援、社福中心或其他正式與非正式資源，並追蹤轉介結果。');
+  if(planItems.includes('AA08／AA09原因說明')) exec.push('六、AA08／AA09原因說明：如需核定，請敘明訪談時間、提出對象及原因，並說明符合相關原則或評估量表項目。');
+  if(val('cpOtherServiceNote')) exec.push('補充說明：' + val('cpOtherServiceNote'));
+  $('carePlanOutput').value = `【${val('cpType')} 照顧計畫草稿】\n一、${intro}\n\n二、個案摘述：\n${summary}\n\n三、照顧問題：\n${probText}\n\n四、照顧計畫目標：\n1. 短期目標（1個月）：依個案主要照顧問題，先穩定基本生活照顧與居家安全，降低跌倒、照顧中斷或身體功能惡化風險。\n2. 中期目標（3個月）：透過服務穩定介入與資源連結，提升個案日常生活支持、服務適切性及主要照顧者照顧能力。\n3. 長期目標（6個月）：建立穩定照顧支持系統，維持個案在熟悉環境中安全生活，並定期追蹤服務效益與目標達成情形。\n\n五、照顧計畫執行規劃：\n${exec.join('\n') || '請勾選服務安排並補充服務頻率、內容及轉介資源。'}\n\n註：若案家訴求與照專評估不一致，請於計畫中補充差異原因；家務服務應敘明範圍，交通接送應描述就醫習慣，喘息服務應追蹤剩餘額度。`;
+}
 
-window.addEventListener('DOMContentLoaded',()=>{fillLevels();initTabs();initQuota();initCodeTool();initFee();initCarePlan();initRenewal();initPhone();});
+function addDays(date, days){ const d=new Date(date+'T00:00:00'); d.setDate(d.getDate()+days); return d.toLocaleDateString('zh-TW'); }
+function checkRenewal(){
+  const total=num('rTotal'), q=num('rQuality'), e=num('rEthics'), l=num('rLaw'), f=num('rFire'), em=num('rEmergency'), inf=num('rInfection'), g=num('rGender'), online=num('rOnline');
+  const qel=q+e+l, safety=f+em+inf+g; let issues=[];
+  if(total<120) issues.push(`六年總積分不足120點，目前${total}點。`);
+  if(qel<24 || q===0 || e===0 || l===0) issues.push(`專業品質／倫理／法規需合計至少24點且各項不得為0，目前合計${qel}點。`);
+  if(safety<10 || f===0 || em===0 || inf===0 || g===0) issues.push(`消防／緊急／感染／性別需合計至少10點且各項不得為0，目前合計${safety}點。`);
+  if(online>80) issues.push('115/07/01起網路課程最高採認80點，請留意超過部分可能不採計。');
+  if($('rCulture').value==='no') issues.push('原民／多元課程尚未完成，最快換證時間原則為到期後隔天且補足積分後辦理。');
+  const end=val('rEnd'); const startApply=end?addDays(end,-183):'到期日前6個月';
+  $('renewalOut').value = `【長照小卡換證初步檢核】\n小卡效期：${val('rStart')||'未填'} 至 ${val('rEnd')||'未填'}\n最早可申請時間：約 ${startApply}\n\n總積分：${total}點\n專業品質／倫理／法規：${qel}點\n消防／緊急／感染／性別：${safety}點\n網路課程：${online}點\n原民／多元：${$('rCulture').value==='yes'?'已完成':'未完成'}\n\n檢核結果：${issues.length?'尚需補強':'初步符合主要檢核條件'}${issues.length?'\n\n需注意：\n- '+issues.join('\n- '):'\n\n提醒：仍需依主管機關及實際積分審認結果為準。'}`;
+}
+
+function initPhone(){
+  const scenarios = ['月例行追蹤','新開案一個月追蹤','出院後追蹤','服務異動追蹤','暫停服務追蹤','高風險個案追蹤','申訴案件追蹤','半年計畫評值前追蹤'];
+  $('phoneScenario').innerHTML = scenarios.map((x,i)=>`<label class="check-item"><input type="radio" name="scenario" value="${x}" ${i===0?'checked':''}><span>${x}</span></label>`).join('');
+  const topics = {
+    '個案體況': ['近期身體狀況是否穩定？','是否有跌倒、急診或住院？','食慾、睡眠、排泄是否有變化？','疼痛、情緒或認知是否需追蹤？','是否有新診斷、新用藥或回診結果？'],
+    '照顧及專業服務': ['居家服務是否穩定提供？','服務內容是否符合目前需求？','是否有請假、缺班、遲到或服務未遇？','專業服務是否已進場？目標是否有進展？','是否需增加、減少或調整服務？'],
+    '交通接送': ['交通車是否預約順利？','是否有連續預約不到或臨時取消？','就醫地點或頻率是否改變？','是否需協助提供預約方式或增加照會單位？'],
+    '輔具及居家無障礙': ['已核定輔具是否購置或領用？','輔具使用是否順利？','居家動線、浴室或門檻是否有新增風險？','是否需再轉介輔具中心或二手輔具？'],
+    '喘息／短照／家照': ['照顧者近期照顧壓力如何？','喘息服務是否預約順利？','短照或外看請假需求是否出現？','家照據點或支持服務是否願意使用？'],
+    '滿意度與後續處置': ['對服務單位與服務人員是否滿意？','是否有希望改善或申訴事項？','是否需調整照顧計畫？','是否有搬家、電話更換、家庭關係或照顧安排改變？']
+  };
+  $('phoneTopics').innerHTML = Object.entries(topics).map(([k,qs])=>`<div class="topic-box"><label class="check-item"><input type="checkbox" value="${k}" checked><span>${k}</span></label><ul>${qs.map(q=>`<li>${q}</li>`).join('')}</ul></div>`).join('');
+  const d = new Date(); $('phDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; $('phTime').value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function generatePhoneRecord(){
+  const topics = Array.from(document.querySelectorAll('#phoneTopics input:checked')).map(x=>x.value);
+  const scenario = document.querySelector('input[name="scenario"]:checked')?.value || '月例行追蹤';
+  const base = `一、電訪日期：${roc(val('phDate'))}${val('phTime') ? ' ' + val('phTime') : ''}\n二、電訪對象：${val('phTarget')}\n三、訪談內容：本次以${val('phMethod')}進行${scenario}。`;
+  const interview = [];
+  if(topics.includes('個案體況')) interview.push(val('phHealthNote') || '聯繫對象表示案主近期體況尚穩定，無明顯跌倒、急診或住院情形，食慾、睡眠及排泄情形後續持續追蹤。');
+  if(topics.includes('照顧及專業服務')) interview.push(val('phCareServiceNote') || '目前照顧及專業服務大致依照顧計畫穩定提供，暫無明顯服務異常或立即調整需求。');
+  if(topics.includes('交通接送') || topics.includes('輔具及居家無障礙') || topics.includes('喘息／短照／家照')) interview.push(val('phOtherServiceNote') || '已關心交通接送、輔具使用、居家環境安全、喘息或家照支持等服務使用情形，暫無新增需求，後續持續追蹤。');
+  if(topics.includes('滿意度與後續處置')) interview.push(val('phFollowNote') || '聯繫對象表示對目前服務尚可，後續由個管持續追蹤個案體況、服務使用情形及家庭需求。');
+  const follow = [];
+  follow.push(`一、照顧及專業服務：${val('phCareServiceNote') || '服務穩定，暫無須異動。'}`);
+  follow.push(`二、交通接送服務：${topics.includes('交通接送') ? '已追蹤交通接送預約與使用情形，必要時協助增加照會或提供預約方式。' : '本次未反映新增交通接送需求。'}`);
+  follow.push(`三、輔具及居家無障礙環境改善：${topics.includes('輔具及居家無障礙') ? '已追蹤輔具購置、使用情形及居家安全，必要時再評估轉介輔具或環改資源。' : '無新增需求。'}`);
+  follow.push(`四、喘息服務／短照服務：${topics.includes('喘息／短照／家照') ? '已關心主要照顧者負荷及喘息、短照或家照支持需求，後續持續追蹤使用情形。' : '本次未反映新增喘息或短照需求。'}`);
+  follow.push(`五、轉介其他資源：${val('phFollowNote') || '目前暫無新增轉介資源，後續依個案及家庭需求連結相關資源。'}`);
+  $('phoneOut').value = `${base}\n${interview.join('')}\n\n【服務追蹤】\n${follow.join('\n')}\n\n註：每月電訪應避免重複複製貼上，需追蹤計畫措施、服務適應情形、滿意度、計畫效益及是否需調整服務內容。`;
+}
+
+async function copyById(id){
+  const el = $(id); const text = el.value || el.innerText;
+  try{ await navigator.clipboard.writeText(text); alert('已複製'); }
+  catch(e){ if(el.select) el.select(); document.execCommand('copy'); alert('已複製'); }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ initTabs(); initQuota(); initCodes(); initCopay(); initCarePlan(); initPhone(); });
