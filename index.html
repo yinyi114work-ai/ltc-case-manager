@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>長照研究室－個管輔助小工具 V13</title>
+  <title>長照研究室－個管輔助小工具 V14</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header class="hero">
   <img src="logo.png" alt="長照研究室 Logo" class="logo" />
   <h1>個管輔助小工具</h1>
-  <p>額度計算｜全碼別手冊｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助</p>
+  <p>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助</p>
   <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。</small>
 </header>
 <nav class="tabs">
   <button class="tab active" data-target="quota">額度計算器</button>
   <button class="tab" data-target="codes">碼別介紹</button>
+  <button class="tab" data-target="atlas">輔具及無障礙圖鑑</button>
   <button class="tab" data-target="fee">民眾自付試算</button>
   <button class="tab" data-target="careplan">照顧計畫生成器</button>
   <button class="tab" data-target="renewal">換證檢核器</button>
@@ -46,6 +47,24 @@
   </div>
   <div id="serviceList" class="service-list"></div>
 </section>
+
+<section id="atlas" class="section">
+  <h2>輔具及居家無障礙圖鑑</h2>
+  <p class="lead">依支付基準 E／F／EI 品項建立，可搜尋名稱或代碼。圖片為家訪說明用的實體示意圖，實際補助仍依評估結果與地方政府公告辦理。</p>
+  <div class="panel sticky-tools atlas-tools">
+    <input id="atlasSearch" placeholder="搜尋輔具名稱或代碼，例如：輪椅、EC01、扶手、FA22" />
+    <div class="subtabs atlas-tabs">
+      <button class="atlas-tab active" data-atlas="all">全部</button>
+      <button class="atlas-tab" data-atlas="mobility">行動輔具</button>
+      <button class="atlas-tab" data-atlas="bath">沐浴與如廁</button>
+      <button class="atlas-tab" data-atlas="bedmove">床類與移位</button>
+      <button class="atlas-tab" data-atlas="life">生活與科技輔具</button>
+      <button class="atlas-tab" data-atlas="home">居家無障礙</button>
+    </div>
+  </div>
+  <div id="atlasList" class="atlas-list"></div>
+</section>
+
 <section id="fee" class="section">
   <h2>民眾自付試算</h2>
   <div class="panel grid3">
@@ -55,7 +74,7 @@
   </div>
   <div id="feeRows" class="fee-rows"></div>
   <div class="result-grid">
-    <div class="result"><span>預估服務總額</span><b id="feeTotal">$0</b></div>
+    <div class="result"><span>預估使用額度</span><b id="feeTotal">$0</b></div>
     <div class="result"><span>CMS可用額度</span><b id="feeQuota">$0</b></div>
     <div class="result"><span>部分負擔</span><b id="feeSelfPay">$0</b></div>
     <div class="result"><span>超額自費</span><b id="feeOverage">$0</b></div>
