@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>長照研究室－個管輔助小工具 V14</title>
+  <title>長照研究室－個管輔助小工具 V17.5</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,7 +11,7 @@
   <img src="logo.png" alt="長照研究室 Logo" class="logo" />
   <h1>個管輔助小工具</h1>
   <p>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助</p>
-  <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。</small>
+  <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。V17.5：碼別介紹分流、輔具圖鑑優化、電訪生成器升級。</small>
 </header>
 <nav class="tabs">
   <button class="tab active" data-target="quota">額度計算器</button>
@@ -35,13 +35,12 @@
 </section>
 <section id="codes" class="section">
   <h2>碼別介紹</h2>
-  <p class="lead">保留支付基準說明、第一類/第二類/第三類金額、個管翻譯機與注意事項。輔具顯示「補助金額」：第一類100%、第二類90%、第三類70%。</p>
+  <p class="lead">保留支付基準說明、第一類/第二類/第三類金額、個管翻譯機與注意事項。輔具及居家無障礙請至「輔具及無障礙圖鑑」查詢。</p>
   <div class="panel sticky-tools">
-    <input id="serviceSearch" placeholder="搜尋碼別或關鍵字，例如 BA07、沐浴、輪椅、GA09" />
+    <input id="serviceSearch" placeholder="搜尋碼別或關鍵字，例如 BA07、沐浴、GA09、AA02" />
     <div class="subtabs">
       <button class="subtab active" data-cat="care">照顧及專業/喘息</button>
       <button class="subtab" data-cat="transport">交通接送</button>
-      <button class="subtab" data-cat="assist">輔具及無障礙</button>
       <button class="subtab" data-cat="aa">AA照顧管理</button>
     </div>
   </div>
@@ -55,6 +54,8 @@
     <input id="atlasSearch" placeholder="搜尋輔具名稱或代碼，例如：輪椅、EC01、扶手、FA22" />
     <div class="subtabs atlas-tabs">
       <button class="atlas-tab active" data-atlas="all">全部</button>
+      <button class="atlas-tab" data-atlas="pictured">有圖片</button>
+      <button class="atlas-tab" data-atlas="nopicture">無圖片</button>
       <button class="atlas-tab" data-atlas="mobility">行動輔具</button>
       <button class="atlas-tab" data-atlas="bath">沐浴與如廁</button>
       <button class="atlas-tab" data-atlas="bedmove">床類與移位</button>
