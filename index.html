@@ -11,7 +11,7 @@
   <img src="logo.png" alt="長照研究室 Logo" class="logo" />
   <h1>個管輔助小工具</h1>
   <p>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助</p>
-  <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。V17.7：碼別介紹分流、輔具圖鑑優化、電訪生成器升級。</small>
+  <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。V18：刪除輔具有圖/無圖分類，電訪生成器改文章式摘要。</small>
 </header>
 <nav class="tabs">
   <button class="tab active" data-target="quota">額度計算器</button>
@@ -54,8 +54,6 @@
     <input id="atlasSearch" placeholder="搜尋輔具名稱或代碼，例如：輪椅、EC01、扶手、FA22" />
     <div class="subtabs atlas-tabs">
       <button class="atlas-tab active" data-atlas="all">全部</button>
-      <button class="atlas-tab" data-atlas="pictured">有圖片</button>
-      <button class="atlas-tab" data-atlas="nopicture">無圖片</button>
       <button class="atlas-tab" data-atlas="mobility">行動輔具</button>
       <button class="atlas-tab" data-atlas="bath">沐浴與如廁</button>
       <button class="atlas-tab" data-atlas="bedmove">床類與移位</button>
@@ -121,6 +119,7 @@
   <p class="lead">以問卷/checkbox方式選擇本次電訪內容；不列全部碼別。</p>
   <div class="panel">
     <div class="grid4"><label>電訪日期<input id="phDate" type="date"></label><label>電訪時間<input id="phTime" type="time"></label><label>聯繫方式<select id="phMethod"><option>電話</option><option>LINE</option><option>視訊</option><option>其他</option></select></label><label>聯繫對象<input id="phPerson" placeholder="例：案女、案長子、案母"></label></div>
+    <div class="grid3"><label>紀錄風格<select id="phStyle"><option value="short">簡短版</option><option value="normal" selected>標準版</option><option value="full">完整版</option></select></label></div>
     <h3>本次電訪主題</h3><div id="phoneChecks" class="input-groups"></div>
     <div class="grid3"><label>個案體況補充<textarea id="phBodyNote"></textarea></label><label>服務追蹤補充<textarea id="phServiceNote"></textarea></label><label>滿意度/後續處置<textarea id="phSatisNote"></textarea></label></div>
     <button id="genPhone" class="primary" type="button">生成電訪紀錄</button>

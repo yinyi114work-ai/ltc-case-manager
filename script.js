@@ -12,7 +12,7 @@ let currentAtlas='all';
 function assistGroup(code){return (ASSIST_ATLAS_META[code]||{}).group||(/FA/.test(code)?'home':/^EA/.test(code)?'bath':/^E[BC]/.test(code)?'mobility':/^E[DG H]/.test(code)?'bedmove':'life')}
 function buildAtlas(){if(!$('atlasList'))return;document.querySelectorAll('.atlas-tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.atlas-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentAtlas=b.dataset.atlas;renderAtlas()});$('atlasSearch').oninput=renderAtlas;renderAtlas()}
 function atlasHasImage(a){const m=ASSIST_ATLAS_META[a.code]||{};const imgs=m.imgs||(m.img?[m.img]:(a.img?[a.img]:[]));return imgs.length>0}
-function renderAtlas(){const q=($('atlasSearch')?.value||'').toLowerCase().trim();let list=ASSIST.filter(a=>{if(currentAtlas==='pictured')return atlasHasImage(a);if(currentAtlas==='nopicture')return !atlasHasImage(a);return currentAtlas==='all'||assistGroup(a.code)===currentAtlas});if(q)list=list.filter(a=>{const m=ASSIST_ATLAS_META[a.code]||{};return (a.code+a.name+(a.official||'')+(a.plain||'')+(m.targets||[]).join('')+(m.features||[]).join('')).toLowerCase().includes(q)});$('atlasList').innerHTML=list.map(a=>atlasCard(a)).join('')||'<div class="panel">查無資料</div>'}
+function renderAtlas(){const q=($('atlasSearch')?.value||'').toLowerCase().trim();let list=ASSIST.filter(a=>currentAtlas==='all'||assistGroup(a.code)===currentAtlas);if(q)list=list.filter(a=>{const m=ASSIST_ATLAS_META[a.code]||{};return (a.code+a.name+(a.official||'')+(a.plain||'')+(m.targets||[]).join('')+(m.features||[]).join('')).toLowerCase().includes(q)});$('atlasList').innerHTML=list.map(a=>atlasCard(a)).join('')||'<div class="panel">查無資料</div>'}
 function atlasCard(a){
   const m=ASSIST_ATLAS_META[a.code]||{};
   const imgs=m.imgs||(m.img?[m.img]:(a.img?[a.img]:[]));
@@ -48,17 +48,42 @@ function buildPlanChecks(){$('cpChecks').innerHTML=groupHtml('疾病/特殊狀�
 function vals(container){const c=$(container);let a=Array.from(c.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);Array.from(c.querySelectorAll('[data-other]')).forEach(x=>{if(x.value.trim())a.push(x.value.trim())});return a}
 function genCarePlan(){const d=$('cpDate').value||'____年__月__日',t=$('cpTime').value||'__：__';const health=vals('cpChecks').join('、');const fam=vals('cpFamily').join('、');const env=vals('cpEnv').join('、');const probs=vals('cpProblems');const ptxt=(probs.length?probs:['請依問題清單排序前5項補充']).map((p,i)=>`${i+1}.${p}：${p==='請依問題清單排序前5項補充'?'':p+'相關需求需持續評估與服務介入。'}`).join('\n');$('careplanOut').value=`${$('cpName').value||'個案'}\n一、本案於${d}${t}進行家訪，與${$('cpPeople').value||'個案及家屬'}討論照顧計畫。\n\n二、個案摘述\n1.個案狀況：${health||'請選擇個案狀況'}。${$('cpHealthNote').value}\n2.家庭狀況：${fam||'請選擇家庭支持與照顧者狀況'}。${$('cpFamilyNote').value}\n3.居住環境：${env||'請選擇環境與輔具狀況'}。${$('cpEnvNote').value}\n\n三、照顧問題\n${ptxt}\n\n四、照顧目標\n1.短期目標(1個月)：${$('cpGoalS').value||'依個案主要照顧問題，於1個月內穩定服務銜接並降低立即風險。'}\n2.中期目標(3個月)：${$('cpGoalM').value||'持續追蹤服務使用情形，依個案狀況調整照顧計畫。'}\n3.長期目標(6個月)：${$('cpGoalL').value||'維持個案於熟悉居家環境中安全生活，並降低主要照顧者負荷。'}\n\n五、照顧計畫\n1.照顧及專業服務：${$('cpCare').value||'暫無或待補充。'}\n2.交通接送：${$('cpTransport').value||'暫無或待補充。'}\n3.輔具及居家無障礙環境改善：${$('cpAssist').value||'暫無或待補充。'}\n4.喘息服務/短照服務：${$('cpRespite').value||'暫無或待補充。'}\n5.轉介其他資源：${$('cpResource').value||'暫無或待補充。'}\n\n六、擬定計畫和實際使用服務的落差\n${$('cpGap').value||'無。'}`}
 function buildPhoneChecks(){const map={body:'個案體況追蹤',cognition:'認知情緒',services:'服務使用狀況',professional:'專業服務追蹤',caregiver:'照顧者狀況',safety:'安全風險',resources:'資源需求'};$('phoneChecks').innerHTML=Object.entries(map).map(([k,t])=>`<details open><summary>${t}</summary><div class="checkbox-grid">${(PHONE_OPTIONS[k]||[]).map(v=>`<label class="check"><input type="checkbox" value="${v.id}" data-phone="${k}">${v.label}</label>`).join('')}</div></details>`).join('')}
-function phoneSelectedTexts(){let texts=[];document.querySelectorAll('[data-phone]:checked').forEach(x=>{const item=(PHONE_OPTIONS[x.dataset.phone]||[]).find(v=>v.id===x.value);if(item)texts.push(item.text)});return texts}
-function genPhone(){let texts=phoneSelectedTexts();const bodyNote=$('phBodyNote').value.trim();const serviceNote=$('phServiceNote').value.trim();const satisNote=$('phSatisNote').value.trim();if(bodyNote)texts.push(bodyNote);if(serviceNote)texts.push(serviceNote);if(satisNote)texts.push(satisNote);if(!texts.length)texts.push('本次電訪依個案體況、各項服務追蹤、照顧者狀況及滿意度進行關懷，案家表示目前暫無明顯異常情形。');$('phoneOut').value=`一、電訪日期：${$('phDate').value||'____年__月__日'}
+function phoneSelectedByGroup(){const picked={};document.querySelectorAll('[data-phone]:checked').forEach(x=>{const item=(PHONE_OPTIONS[x.dataset.phone]||[]).find(v=>v.id===x.value);if(item){(picked[x.dataset.phone]||(picked[x.dataset.phone]=[])).push(item)}});return picked}
+function joinTexts(items){return (items||[]).map(x=>x.text).join('')}
+function makePara(parts){return parts.filter(Boolean).map(x=>String(x).trim()).filter(Boolean).join('')}
+function genPhone(){const picked=phoneSelectedByGroup();const bodyNote=$('phBodyNote').value.trim();const serviceNote=$('phServiceNote').value.trim();const satisNote=$('phSatisNote').value.trim();const method=$('phMethod').value||'電話';const person=$('phPerson').value||'案家';const style=$('phStyle')?.value||'normal';
+  const body=makePara([joinTexts(picked.body),joinTexts(picked.cognition),bodyNote]);
+  const service=makePara([joinTexts(picked.services),joinTexts(picked.professional),serviceNote]);
+  const caregiver=makePara([joinTexts(picked.caregiver)]);
+  const safety=makePara([joinTexts(picked.safety)]);
+  const resource=makePara([joinTexts(picked.resources),satisNote]);
+  let paras=[];
+  if(style==='short'){
+    paras.push(makePara([`本次以${method}聯繫${person}進行追蹤。`,body||'案家表示個案目前體況尚稱穩定，暫無明顯異常情形。',service||'目前長照服務依照顧計畫持續提供。']));
+    paras.push(makePara([caregiver,safety,resource||'案家表示目前暫無新增資源需求，後續將持續追蹤個案狀況及服務使用情形。']));
+  }else{
+    paras.push(makePara([`本次以${method}聯繫${person}進行電訪追蹤。`,body||'案家表示個案近期體況尚稱穩定，精神及日常生活狀況無明顯異常，後續仍需持續觀察。']));
+    paras.push(makePara([service||'目前長照服務均依照顧計畫持續提供，服務使用情形尚稱穩定，案家暫無反映需立即調整之事項。']));
+    if(caregiver)paras.push(caregiver);
+    if(safety)paras.push(safety);
+    paras.push(makePara([resource||'案家表示目前暫無新增資源需求，後續將持續追蹤個案體況、服務使用情形及照顧需求變化。']));
+    if(style==='full'){
+      paras.push('本次電訪已同步提醒案家，如個案體況、家庭照顧安排或服務需求有明顯變化，得主動聯繫個案管理單位，後續將依實際需求協助評估照顧計畫調整或相關資源連結。');
+    }
+  }
+  const follow=style==='short'?'持續追蹤個案狀況及服務使用情形，必要時協助調整照顧計畫或連結相關資源。':'後續將持續追蹤個案身心狀況、家庭支持情形、服務使用情形及照顧需求變化，必要時協助辦理照顧計畫調整或連結相關資源。';
+  $('phoneOut').value=`一、電訪日期：${$('phDate').value||'____年__月__日'}
 二、電訪時間：${$('phTime').value||'__：__'}
-三、電訪方式：${$('phMethod').value}
-四、電訪對象：${$('phPerson').value||'案家'}
+三、電訪方式：${method}
+四、電訪對象：${person}
 
-五、訪談內容：
-${texts.map(t=>'　　'+t).join('\n\n')}
+五、電訪摘要：
+
+${paras.filter(Boolean).map(p=>'　　'+p).join('\n\n')}
 
 六、後續處理：
-　　後續將持續追蹤個案體況、服務使用情形及照顧需求，必要時協助調整照顧計畫或連結相關資源。`}
+　　${follow}`
+}
 function addCultureRow(){const div=document.createElement('div');div.className='fee-row';div.innerHTML=`<label>課程日期<input type="date" class="cDate"></label><label>課程類別<select class="cType"><option value="old">舊制/多元文化族群</option><option value="indigenous">原住民族文化安全</option><option value="multi">多元族群文化敏感度</option></select></label><label>點數<input type="number" step="0.5" class="cPoint" value="1"></label><button type="button" class="remove">刪除</button>`;$('cultureRows').appendChild(div);div.querySelector('.remove').onclick=()=>div.remove()}
 function checkRenewal(){const total=+$('renewTotal').value||0,online=+$('renewOnline').value||0,q=+$('rq').value||0,e=+$('re').value||0,l=+$('rl').value||0,safe=+$('rsafe').value||0;const start=new Date($('renewStart').value),end=new Date($('renewEnd').value);let issues=[],ok=[];if(total>=120)ok.push('六年總積分已達120點。');else issues.push(`六年總積分尚缺 ${120-total} 點。`);if(q+e+l>=24&&q>0&&e>0&&l>0)ok.push('專業品質/倫理/法規合計達24點且各項不為0。');else issues.push('專業品質、倫理、法規需合計至少24點且各項不得為0。');if(safe>=10)ok.push('消防/緊急/感染/性別合計達10點。');else issues.push('消防安全、緊急應變、感染管制、性別敏感度合計需至少10點。');if(end>=new Date('2026-07-01')&&online>80)issues.push('115/07/01起網路課程最高採認80點，超過部分可能不採計。');const courses=Array.from(document.querySelectorAll('#cultureRows .fee-row')).map(r=>({d:new Date(r.querySelector('.cDate').value),type:r.querySelector('.cType').value,p:+r.querySelector('.cPoint').value||0})).filter(x=>!isNaN(x.d));const split=new Date('2024-06-03');const oldPts=courses.filter(c=>c.d<split&&c.type==='old').reduce((a,c)=>a+c.p,0);if(start<split){if(oldPts>=2)ok.push('113/06/02以前舊制/多元文化族群課程已達2點。');else issues.push('113/06/02以前僅採舊制/多元文化族群課程，尚未達2點。')}let ylines=[];if(end>=split){let yStart=new Date(Math.max(start.getTime(),split.getTime())),idx=1;while(yStart<end){let yEnd=new Date(yStart);yEnd.setFullYear(yEnd.getFullYear()+1);if(yEnd>end)yEnd=new Date(end);let ind=courses.filter(c=>c.d>=yStart&&c.d<yEnd&&c.type==='indigenous').reduce((a,c)=>a+c.p,0);let mul=courses.filter(c=>c.d>=yStart&&c.d<yEnd&&c.type==='multi').reduce((a,c)=>a+c.p,0);let pass=ind>=1&&mul>=1;ylines.push(`${pass?'✅':'❌'}第${idx}年度：原民${ind}點／多元${mul}點`);if(!pass)issues.push(`第${idx}年度原民/多元課程未完成。`);yStart=yEnd;idx++}}let can=new Date(end);can.setMonth(can.getMonth()-6);let after=new Date(end);after.setDate(after.getDate()+1);$('renewalOut').value=`檢核結果：${issues.length?'尚未完全符合':'初步符合'}\n\n已符合：\n${ok.join('\n')||'無'}\n\n待補事項：\n${issues.join('\n')||'無'}\n\n原民/多元年度檢核：\n${ylines.join('\n')||'無需年度檢核或未輸入日期'}\n\n${issues.some(x=>x.includes('原民')||x.includes('多元'))?`最快換證時間：到期後隔天（${after.toLocaleDateString('zh-TW')}）且補足學分後辦理。`:`最早可於到期日前6個月申請（${can.toLocaleDateString('zh-TW')}）。`}`}
 function copyText(id){const el=$(id);el.select();document.execCommand('copy')}
