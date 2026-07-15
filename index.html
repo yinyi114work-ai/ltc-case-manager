@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>長照研究室－個管輔助小工具 V17.7</title>
+  <title>Longcare.Notes｜長照研究室</title>
   <link rel="stylesheet" href="style.css?v=17.7" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
@@ -17,10 +17,19 @@
 <body>
 <header class="hero">
   <img src="logo.png" alt="長照研究室 Logo" class="logo" />
-  <h1>個管輔助小工具</h1>
-  <p>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助</p>
-  <small>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。V18：刪除輔具有圖/無圖分類，電訪生成器改文章式摘要。</small>
+  <h1>Longcare.Notes</h1>
+  <p>長照研究室｜給長照人的免費工具箱</p>
+  <small>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助<br>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。</small>
 </header>
+
+<section aria-label="長照法規速查入口" style="max-width:1100px;margin:16px auto 8px;padding:0 16px;">
+  <a href="./law/" style="display:block;text-decoration:none;color:inherit;background:#fff8ec;border:1px solid #e8d8bd;border-radius:18px;padding:18px 20px;box-shadow:0 4px 14px rgba(75,60,35,.08);">
+    <div style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">📚 長照法規速查</div>
+    <div style="line-height:1.6;">輸入 BA13、AA01 或服務關鍵字，快速查看現行規定、相關函示與官方來源。</div>
+    <div style="margin-top:10px;font-weight:700;">立即查詢 →</div>
+  </a>
+</section>
+
 <nav class="tabs">
   <button class="tab active" data-target="quota">額度計算器</button>
   <button class="tab" data-target="codes">碼別介紹</button>
@@ -135,7 +144,7 @@
   <h3 class="output-title">生成結果</h3><textarea id="phoneOut" class="big-output"></textarea><button onclick="copyText('phoneOut')" class="secondary" type="button">複製電訪紀錄</button>
 </section>
 </main>
-<footer>© 長照研究室 LONG-TERM CARE LAB｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
+<footer>© Longcare.Notes｜長照研究室｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
 <script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script>
 </body>
 </html>
