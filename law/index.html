@@ -1,14 +1,959 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>長照研究室｜碼別法規與函釋速查</title><style>
-:root{--bg:#f8f4ec;--card:#fffdfa;--ink:#2f3b46;--muted:#6f7a83;--blue:#6f96a8;--yellow:#e8c86b;--line:#ddd4c8;--warn:#fff3c9}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}.wrap{max-width:960px;margin:auto;padding:28px 18px 60px}header{margin-bottom:22px}.brand{font-weight:800;letter-spacing:.04em}.brand span{background:var(--yellow);padding:4px 9px;border-radius:10px}.sub{color:var(--muted);margin-top:10px}.search{display:flex;gap:10px;position:sticky;top:0;padding:12px 0;background:linear-gradient(var(--bg) 80%,transparent);z-index:5}.search input{flex:1;font-size:20px;padding:15px 18px;border:2px solid var(--blue);border-radius:16px;background:#fff;outline:none}.search button{border:0;border-radius:16px;padding:0 20px;background:var(--blue);color:white;font-weight:700}.hint,.count{color:var(--muted);font-size:14px}.grid{display:grid;gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 4px 18px rgba(60,50,40,.05)}.code{font-size:24px;font-weight:900}.title{font-size:20px;font-weight:700;margin:3px 0 12px}.tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.tag{font-size:12px;background:#edf3f5;padding:5px 8px;border-radius:99px}.tag.warn{background:var(--warn)}details{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px}summary{cursor:pointer;font-weight:700}.raw{white-space:pre-wrap;font-size:14px;line-height:1.7;margin-top:10px;background:#f6f3ed;padding:14px;border-radius:12px;overflow:auto}.interp{border-left:5px solid var(--yellow)}.meta{font-size:13px;color:var(--muted);margin-bottom:8px}.summary{line-height:1.75}.source{display:inline-block;margin-top:10px;color:#35677c;font-weight:700;text-decoration:none}.empty{text-align:center;padding:40px;color:var(--muted)}footer{margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7}@media(max-width:620px){.search button{display:none}.code{font-size:22px}.title{font-size:18px}}
-</style></head><body><div class="wrap"><header><div class="brand"><span>長照研究室</span>　碼別法規與函釋速查</div><div class="sub">輸入碼別或關鍵字，例如：BA13、陪同外出、復健、洗腎。</div></header><div class="search"><input id="q" autofocus placeholder="輸入碼別或服務名稱"><button id="go">查詢</button></div><div id="count" class="count"></div><div id="results" class="grid"></div><footer>資料基礎：衛生福利部《長期照顧服務申請及給付辦法》附表四、附表四之一，以及衛福部與地方政府公開之函釋索引。此工具為速查整理，不取代主管機關個案審核、正式函文或最新法規。資料版本：115年7月。</footer></div><script src="data.js"></script><script>
-const q=document.querySelector('#q'),results=document.querySelector('#results'),count=document.querySelector('#count');
-const norm=s=>(s||'').toString().toLowerCase().replace(/[\s()（）－—_-]/g,'');
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function render(){const term=norm(q.value); if(!term){results.innerHTML='<div class="empty">輸入 BA13 試試看。</div>';count.textContent='';return}
- const codes=CODE_DATA.filter(x=>norm(x.searchText).includes(term)).slice(0,30);
- const ints=INTERPRETATIONS.filter(x=>norm([x.codes,x.title,x.summary,x.keywords,x.docNo].join(' ')).includes(term));
- count.textContent=`找到 ${codes.length} 筆碼別資料、${ints.length} 筆相關函釋`;
- let h=''; codes.forEach(x=>{h+=`<section class="card"><div class="code">${esc(x.code)}</div><div class="title">${esc(x.title)}</div><div class="tags"><span class="tag">現行給付規定</span>${x.prices?.length?`<span class="tag">支付價格：${esc(x.prices.join('／'))}</span>`:''}</div><details><summary>展開法規原文整理</summary><div class="raw">${esc(x.raw)}</div></details></section>`});
- ints.forEach(x=>{h+=`<section class="card interp"><div class="meta">${esc(x.date)}｜${esc(x.docNo)}</div><div class="title">${esc(x.title)}</div><div class="tags"><span class="tag warn">函釋／實務補充</span><span class="tag">${esc(x.status)}</span></div><div class="summary">${esc(x.summary)}</div><a class="source" href="${esc(x.source)}" target="_blank" rel="noopener">查看官方或政府公開來源 ↗</a></section>`});
- results.innerHTML=h||'<div class="empty">目前沒有找到資料。可改用碼別、服務名稱或情境關鍵字。</div>'}
-q.addEventListener('input',render);document.querySelector('#go').onclick=render;q.value='BA13';render();</script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="長照碼別、給付規定與政府公開函釋關鍵字速查。" />
+  <title>長照研究室｜法規與函釋速查</title>
+  <style>
+    :root {
+      --bg: #f8f4ec;
+      --card: #fffdfa;
+      --ink: #2f3b46;
+      --muted: #6f7a83;
+      --blue: #6f96a8;
+      --blue-dark: #35677c;
+      --yellow: #e8c86b;
+      --line: #ddd4c8;
+      --warn: #fff3c9;
+      --soft: #edf3f5;
+      --success: #edf6e9;
+      --danger: #fff0ea;
+      --shadow: 0 5px 20px rgba(60, 50, 40, .06);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC", sans-serif;
+    }
+
+    button,
+    input { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .skip-link {
+      position: fixed;
+      left: 12px;
+      top: -60px;
+      z-index: 30;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .skip-link:focus { top: 12px; }
+
+    .wrap {
+      width: min(100%, 1000px);
+      margin: 0 auto;
+      padding: 24px 18px 60px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+      color: var(--blue-dark);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible { text-decoration: underline; }
+
+    .page-header { margin-bottom: 18px; }
+
+    .brand {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      border-radius: 10px;
+      background: var(--yellow);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .local-search-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 7px 10px;
+      border: 1px solid #cfe0d0;
+      border-radius: 999px;
+      background: var(--success);
+      color: #4b684b;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .sync-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .search-panel {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin: 20px 0 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(248, 244, 236, .96);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .search-label {
+      display: block;
+      margin: 0 0 8px 2px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+    }
+
+    .search-row input {
+      min-width: 0;
+      padding: 14px 16px;
+      border: 2px solid var(--blue);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 18px;
+      outline: none;
+    }
+
+    .search-row input:focus {
+      border-color: var(--blue-dark);
+      box-shadow: 0 0 0 3px rgba(111, 150, 168, .18);
+    }
+
+    .primary-button,
+    .secondary-button {
+      min-height: 52px;
+      padding: 0 18px;
+      border-radius: 14px;
+      font-weight: 900;
+    }
+
+    .primary-button {
+      border: 0;
+      background: var(--blue-dark);
+      color: #fff;
+    }
+
+    .secondary-button {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+    }
+
+    .primary-button:hover,
+    .primary-button:focus-visible { background: #28596d; }
+
+    .secondary-button:hover,
+    .secondary-button:focus-visible { border-color: var(--blue); }
+
+    .example-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .example-button {
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--blue-dark);
+      font-weight: 800;
+    }
+
+    .example-button:hover,
+    .example-button:focus-visible { border-color: var(--blue); }
+
+    .expanded-terms {
+      margin: 9px 2px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .result-summary {
+      min-height: 25px;
+      margin: 14px 2px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .result-summary strong { color: var(--ink); }
+
+    .result-group { margin-top: 24px; }
+
+    .group-heading {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 11px;
+      font-size: 20px;
+    }
+
+    .group-count {
+      min-width: 27px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--blue-dark);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .grid { display: grid; gap: 14px; }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card.interpretation { border-left: 5px solid var(--yellow); }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .code {
+      margin-bottom: 3px;
+      color: var(--blue-dark);
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: .02em;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .match-label {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--success);
+      color: #4b684b;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .match-label.related {
+      background: var(--warn);
+      color: #7b6322;
+    }
+
+    .match-label.partial {
+      background: var(--soft);
+      color: var(--muted);
+    }
+
+    .tags {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin: 11px 0;
+    }
+
+    .tag {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--soft);
+      font-size: 12px;
+    }
+
+    .tag.warn { background: var(--warn); }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .meta-item {
+      padding: 10px 12px;
+      border: 1px solid #ece4da;
+      border-radius: 12px;
+      background: #fff;
+      line-height: 1.55;
+    }
+
+    .meta-item span {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .meta-item strong {
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .summary,
+    .match-snippet {
+      margin-top: 12px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .match-snippet {
+      padding: 13px 14px;
+      border-radius: 13px;
+      background: #f7f3eb;
+    }
+
+    .match-snippet strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--blue-dark);
+      font-size: 13px;
+    }
+
+    mark {
+      padding: 0 .08em;
+      border-radius: 3px;
+      background: #ffe58f;
+      color: inherit;
+    }
+
+    details {
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--line);
+    }
+
+    summary {
+      color: var(--blue-dark);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .raw {
+      margin-top: 10px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #f6f3ed;
+      font-size: 14px;
+      line-height: 1.75;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 13px;
+      color: var(--blue-dark);
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .source-link:hover,
+    .source-link:focus-visible { text-decoration: underline; }
+
+    .notice,
+    .empty {
+      padding: 28px 20px;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      color: var(--muted);
+      line-height: 1.75;
+      text-align: center;
+    }
+
+    .notice.warning {
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border-style: solid;
+      background: var(--warn);
+      color: #725e25;
+      text-align: left;
+    }
+
+    .notice.error {
+      border-style: solid;
+      border-color: #ecc8bd;
+      background: var(--danger);
+      color: #8b4e42;
+    }
+
+    footer {
+      margin-top: 34px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .meta-item.wide { grid-column: 1 / -1; }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 680px) {
+      .wrap { padding: 18px 14px 44px; }
+      .search-panel { margin-inline: -4px; padding: 11px; }
+      .search-row { grid-template-columns: 1fr auto; }
+      .secondary-button { grid-column: 1 / -1; min-height: 42px; }
+      .card-head { display: block; }
+      .match-label { display: inline-block; margin-top: 9px; }
+      .meta-grid { grid-template-columns: 1fr; }
+      .title { font-size: 18px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#results">跳到查詢結果</a>
+
+  <div class="wrap">
+    <header class="page-header">
+      <a class="back-link" href="../">← 回到 Longcare.Notes 工具箱</a>
+      <div><span class="brand">長照研究室</span></div>
+      <h1>法規與函釋速查</h1>
+      <p class="subtitle">輸入碼別、服務名稱、實務情境或公文文號；多個詞可用空格分開，例如「據點 陪同外出」。結果會優先顯示同時符合全部關鍵字的法規與函釋。</p>
+      <div class="local-search-note">✓ 純瀏覽器搜尋，不使用 AI Token</div>
+      <div id="syncStatus" class="sync-note">已內建臺中市政府衛生局公開函釋整理，不需等待線上同步。</div>
+    </header>
+
+    <main>
+      <section class="search-panel" aria-label="法規搜尋">
+        <label class="search-label" for="q">搜尋碼別、服務名稱、情境或文號</label>
+        <div class="search-row">
+          <input id="q" type="search" inputmode="search" autocomplete="off" placeholder="例如：據點 陪同外出" aria-describedby="search-help" />
+          <button id="go" class="primary-button" type="button">查詢</button>
+          <button id="clear" class="secondary-button" type="button" hidden>清除</button>
+        </div>
+        <div id="search-help" class="example-row">
+          <span>試試看：</span>
+          <button class="example-button" type="button" data-query="BA13">BA13</button>
+          <button class="example-button" type="button" data-query="陪同外出">陪同外出</button>
+          <button class="example-button" type="button" data-query="據點 陪同外出">據點＋陪同外出</button>
+          <button class="example-button" type="button" data-query="洗腎 陪同外出">洗腎＋陪同外出</button>
+          <button class="example-button" type="button" data-query="BA16 代購">BA16＋代購</button>
+          <button class="example-button" type="button" data-query="GA09 居家喘息">GA09＋居家喘息</button>
+        </div>
+        <div id="expandedTerms" class="expanded-terms" hidden></div>
+      </section>
+
+      <div id="count" class="result-summary" role="status" aria-live="polite"></div>
+      <div id="results"></div>
+    </main>
+
+    <footer>
+      <div>資料基礎：衛生福利部《長期照顧服務申請及給付辦法》附表，以及臺中市政府衛生局公開之衛生福利部函釋與附件。</div>
+      <div>本工具為關鍵字速查整理，不取代主管機關個案審核、正式函文或最新法規；相關詞只用於協助搜尋，不代表法律概念完全相同。</div>
+      <div id="dataVersion">資料版本：請以 data.js 標示版本為準。</div>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="interpretations.js"></script>
+  <script>
+    (() => {
+      'use strict';
+
+      const CODE_ROWS = typeof CODE_DATA !== 'undefined' && Array.isArray(CODE_DATA) ? CODE_DATA : [];
+      const INTERPRETATION_ROWS = typeof INTERPRETATIONS !== 'undefined' && Array.isArray(INTERPRETATIONS) ? INTERPRETATIONS : [];
+      const META = typeof DATA_META !== 'undefined' && DATA_META && typeof DATA_META === 'object' ? DATA_META : {};
+      const SYNC_META = typeof INTERPRETATION_META !== 'undefined' && INTERPRETATION_META && typeof INTERPRETATION_META === 'object' ? INTERPRETATION_META : {};
+
+      const q = document.querySelector('#q');
+      const results = document.querySelector('#results');
+      const count = document.querySelector('#count');
+      const clearButton = document.querySelector('#clear');
+      const expandedTerms = document.querySelector('#expandedTerms');
+      const dataVersion = document.querySelector('#dataVersion');
+      const syncStatus = document.querySelector('#syncStatus');
+
+      const RELATED_TERM_GROUPS = [
+        ['BA13', '陪同外出', '陪同就醫', '外出陪同'],
+        ['BA16', '代購', '代領', '代送', '代購或代領或代送服務', '代購餐食', '代領藥品', '藥品代購', '代購成藥'],
+        ['GA09', '居家喘息', '喘息服務', '居家喘息服務'],
+        ['DA01', '交通接送', '就醫接送', '復健接送'],
+        ['BA24', '協助排泄', '排泄', '失禁處理'],
+        ['據點', 'C據點', 'C級巷弄長照站', '巷弄長照站', '社區照顧關懷據點'],
+        ['洗腎', '血液透析', '透析'],
+        ['復健', '復能', '物理治療', '職能治療']
+      ];
+
+      const normalize = value => String(value ?? '')
+        .normalize('NFKC')
+        .toLocaleLowerCase('zh-Hant')
+        .replace(/[\s\u3000()[\]{}（）【】《》〈〉「」『』,，、。.;；:：!?！？'"“”‘’·•/\\|+＝=_\-–—]/g, '');
+
+      const asText = value => {
+        if (Array.isArray(value)) return value.map(asText).filter(Boolean).join(' ');
+        if (value && typeof value === 'object') return Object.values(value).map(asText).filter(Boolean).join(' ');
+        return value == null ? '' : String(value);
+      };
+
+      const asList = value => {
+        if (Array.isArray(value)) return value.map(asText).filter(Boolean);
+        if (!value) return [];
+        return String(value).split(/[、,，/\s]+/).map(item => item.trim()).filter(Boolean);
+      };
+
+      const unique = values => [...new Map(values.filter(Boolean).map(value => [normalize(value), String(value)])).values()];
+
+      const tokenize = value => unique(String(value || '')
+        .trim()
+        .split(/[\s\u3000,，、;；|+]+/)
+        .map(item => item.trim())
+        .filter(Boolean));
+
+      const alternativesFor = token => {
+        const tokenKey = normalize(token);
+        const group = RELATED_TERM_GROUPS.find(terms => terms.some(term => normalize(term) === tokenKey));
+        return unique([token, ...(group || [])]);
+      };
+
+      const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[char]);
+
+      const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const highlight = (value, phrases) => {
+        const source = String(value ?? '');
+        const visiblePhrases = unique(phrases).filter(term => String(term).length > 0).sort((a, b) => b.length - a.length);
+        if (!source || !visiblePhrases.length) return escapeHtml(source);
+        const expression = new RegExp(`(${visiblePhrases.map(escapeRegExp).join('|')})`, 'gi');
+        return source.split(expression).map(part => {
+          const isHit = visiblePhrases.some(term => normalize(term) === normalize(part));
+          return isHit ? `<mark>${escapeHtml(part)}</mark>` : escapeHtml(part);
+        }).join('');
+      };
+
+      const safeUrl = value => {
+        if (!value) return '';
+        try {
+          const parsed = new URL(String(value), document.baseURI);
+          return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '';
+        } catch (_) {
+          return '';
+        }
+      };
+
+      const inferSourceName = (item, kind) => {
+        const explicit = item.sourceName || item.sourceTitle || item.agency || item.issuer || item.authority || item.department || item.lawName || item.basis;
+        if (explicit) return asText(explicit);
+        if (/衛(?:部|福部)/.test(asText(item.docNo))) return '衛生福利部（函文）';
+        const url = safeUrl(item.source || item.sourceUrl || item.url);
+        if (url.includes('mohw.gov.tw')) return '衛生福利部';
+        if (url.includes('law.moj.gov.tw')) return '全國法規資料庫';
+        if (url.includes('.gov.tw')) return '政府機關公開來源';
+        return kind === 'code' ? '長期照顧服務申請及給付辦法（附表）' : '政府公開函釋來源';
+      };
+
+      const fieldsFor = (item, kind) => kind === 'code' ? [
+        { value: item.code, weight: 110 },
+        { value: item.title, weight: 65 },
+        { value: item.searchText, weight: 55 },
+        { value: item.keywords, weight: 45 },
+        { value: item.raw, weight: 24 },
+        { value: item.sourceName || item.sourceTitle || item.lawName || item.basis, weight: 15 }
+      ] : [
+        { value: item.codes, weight: 100 },
+        { value: item.docNo, weight: 90 },
+        { value: item.title, weight: 65 },
+        { value: item.keywords, weight: 55 },
+        { value: item.summary, weight: 35 },
+        { value: item.raw || item.content, weight: 25 },
+        { value: item.sourceName || item.agency || item.issuer || item.authority, weight: 18 },
+        { value: item.status, weight: 8 }
+      ];
+
+      const sourceQuality = item => {
+        const url = safeUrl(item.source || item.sourceUrl || item.url);
+        if (!url) return 0;
+        if (/\.(pdf|doc|docx|odt)(?:$|[?#])/i.test(url)) return 120;
+        if (/\/\d+\/post(?:$|[?#])/.test(url)) return 90;
+        if (/health\.taichung\.gov\.tw/.test(url)) return 55;
+        if (/cp\.aspx\?n=412/.test(url)) return -80;
+        if (/health\.ntpc\.gov\.tw\/basic/.test(url)) return -70;
+        return 0;
+      };
+
+      const scoreItem = (item, kind, tokenSets, rawQuery) => {
+        const fields = fieldsFor(item, kind).map(field => ({ ...field, text: normalize(asText(field.value)) }));
+        const matchedPhrases = [];
+        let score = kind === 'interpretation' ? sourceQuality(item) : 0;
+        let coverage = 0;
+
+        tokenSets.forEach(alternatives => {
+          let bestScore = 0;
+          let bestPhrase = '';
+          fields.forEach(field => {
+            alternatives.forEach(phrase => {
+              const phraseKey = normalize(phrase);
+              if (!phraseKey || !field.text.includes(phraseKey)) return;
+              const exactBonus = field.text === phraseKey ? 18 : 0;
+              const candidateScore = field.weight + exactBonus + Math.min(phraseKey.length, 12);
+              if (candidateScore > bestScore) {
+                bestScore = candidateScore;
+                bestPhrase = phrase;
+              }
+            });
+          });
+          if (bestScore > 0) {
+            coverage += 1;
+            score += bestScore;
+            matchedPhrases.push(bestPhrase);
+          }
+        });
+
+        const fullQuery = normalize(rawQuery);
+        const fullText = fields.map(field => field.text).join('');
+        if (fullQuery && fullText.includes(fullQuery)) score += 35;
+        if (coverage === tokenSets.length && coverage > 0) score += 160;
+        else score += coverage * 8;
+
+        return { item, kind, coverage, score, matchedPhrases: unique(matchedPhrases), related: false };
+      };
+
+      const extractCodes = value => {
+        const direct = asList(value);
+        const found = asText(value).toUpperCase().match(/\b[A-Z]{1,4}\s*\d{1,3}[A-Z]?\b/g) || [];
+        return unique([...direct, ...found].map(code => normalize(code).toUpperCase()));
+      };
+
+      const recordCodes = result => result.kind === 'code'
+        ? extractCodes(result.item.code)
+        : extractCodes(result.item.codes || result.item.code);
+
+      const overlaps = (left, right) => left.some(value => right.includes(value));
+
+      const sortMatches = (left, right, totalTokens) => {
+        const leftComplete = left.coverage === totalTokens ? 1 : 0;
+        const rightComplete = right.coverage === totalTokens ? 1 : 0;
+        return rightComplete - leftComplete
+          || Number(right.related) - Number(left.related)
+          || right.coverage - left.coverage
+          || right.score - left.score;
+      };
+
+      const matchLabel = (result, totalTokens) => {
+        if (result.coverage === totalTokens) return '<span class="match-label">完整符合</span>';
+        if (result.related) return '<span class="match-label related">相關碼別／函釋</span>';
+        return `<span class="match-label partial">部分符合 ${result.coverage}/${totalTokens}</span>`;
+      };
+
+      const snippetFrom = (value, phrases, limit = 310) => {
+        const source = String(value ?? '').trim();
+        if (!source) return '';
+        const lines = source.split(/\n+/).map(line => line.trim()).filter(Boolean);
+        const phraseKeys = unique(phrases).map(normalize).filter(Boolean);
+        let selected = lines.find(line => phraseKeys.some(key => normalize(line).includes(key))) || '';
+
+        if (!selected) {
+          const lowered = source.toLocaleLowerCase('zh-Hant');
+          const indexes = unique(phrases)
+            .map(term => lowered.indexOf(String(term).toLocaleLowerCase('zh-Hant')))
+            .filter(index => index >= 0);
+          const firstIndex = indexes.length ? Math.min(...indexes) : 0;
+          const start = Math.max(0, firstIndex - 80);
+          selected = `${start > 0 ? '…' : ''}${source.slice(start, start + limit)}${start + limit < source.length ? '…' : ''}`;
+        }
+
+        if (selected.length > limit) selected = `${selected.slice(0, limit)}…`;
+        return selected;
+      };
+
+      const renderSourceLink = item => {
+        const url = safeUrl(item.source || item.sourceUrl || item.url);
+        if (!url) return '';
+        const alternate = safeUrl(item.alternateSource);
+        const alternateLink = alternate && alternate !== url
+          ? `<a class="source-link secondary" href="${escapeHtml(alternate)}" target="_blank" rel="noopener noreferrer">點開全文（備用連結） <span aria-hidden="true">↗</span></a>`
+          : '';
+        return `<a class="source-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">點開全文 <span aria-hidden="true">↗</span></a>${alternateLink}`;
+      };
+
+      const renderCodeCard = (result, tokenSets) => {
+        const item = result.item;
+        const phrases = unique([...tokenSets.flat(), ...result.matchedPhrases]);
+        const raw = asText(item.raw || item.content || item.text);
+        const snippet = snippetFrom(raw, phrases);
+        const prices = asList(item.prices || item.price);
+        const sourceName = inferSourceName(item, 'code');
+        const money = value => /^\s*[\d,]+\s*$/.test(asText(value)) ? `${asText(value).trim()} 元` : asText(value);
+        const structuredPrices = [
+          item.standardPrice ? `<span class="tag">一般給（支）付：${highlight(money(item.standardPrice), phrases)}</span>` : '',
+          item.remotePrice ? `<span class="tag">原民區／離島：${highlight(money(item.remotePrice), phrases)}</span>` : '',
+          item.rentalPrice ? `<span class="tag">租賃上限：${highlight(money(item.rentalPrice), phrases)}</span>` : '',
+          item.purchasePrice ? `<span class="tag">購置上限：${highlight(money(item.purchasePrice), phrases)}</span>` : ''
+        ].filter(Boolean);
+        const extraMeta = [
+          ['給付方式', item.serviceMode, false],
+          ['購置最低使用年限', item.minimumUseYears ? `${asText(item.minimumUseYears)} 年` : '', false],
+          ['適用對象', item.eligibility, true],
+          ['租賃價格說明', item.priceNote, true]
+        ].filter(([, value]) => value).map(([label, value, wide]) => `
+          <div class="meta-item${wide ? ' wide' : ''}"><span>${escapeHtml(label)}</span><strong>${highlight(value, phrases)}</strong></div>`).join('');
+
+        return `<article class="card">
+          <div class="card-head">
+            <div>
+              <div class="code">${highlight(item.code || '未標示碼別', phrases)}</div>
+              <h3 class="title">${highlight(item.title || '未標示服務名稱', phrases)}</h3>
+            </div>
+            ${matchLabel(result, tokenSets.length)}
+          </div>
+          <div class="tags">
+            <span class="tag">現行給付規定</span>
+            ${item.category ? `<span class="tag">${escapeHtml(asText(item.category))}</span>` : ''}
+            ${structuredPrices.join('')}
+            ${!structuredPrices.length && prices.length ? `<span class="tag">支付價格：${prices.map(price => highlight(money(price), phrases)).join('／')}</span>` : ''}
+          </div>
+          <div class="meta-grid">
+            <div class="meta-item"><span>法規來源</span><strong>${escapeHtml(sourceName)}</strong></div>
+            <div class="meta-item"><span>關聯碼別</span><strong>${escapeHtml(item.code || '未標示')}</strong></div>
+            ${extraMeta}
+          </div>
+          ${snippet ? `<div class="match-snippet"><strong>命中內容</strong>${highlight(snippet, phrases)}</div>` : ''}
+          ${raw ? `<details><summary>查看法規原文整理</summary><div class="raw">${highlight(raw, phrases)}</div></details>` : ''}
+          ${renderSourceLink(item)}
+        </article>`;
+      };
+
+      const renderInterpretationCard = (result, tokenSets) => {
+        const item = result.item;
+        const phrases = unique([...tokenSets.flat(), ...result.matchedPhrases]);
+        const raw = asText(item.raw || item.content);
+        const summary = asText(item.summary) || snippetFrom(raw, phrases, 360);
+        const codes = asList(item.codes || item.code);
+        const sourceName = inferSourceName(item, 'interpretation');
+
+        return `<article class="card interpretation">
+          <div class="card-head">
+            <h3 class="title">${highlight(item.title || '函釋／實務補充', phrases)}</h3>
+            ${matchLabel(result, tokenSets.length)}
+          </div>
+          <div class="tags">
+            <span class="tag warn">函釋／實務補充</span>
+            ${item.status ? `<span class="tag">${escapeHtml(asText(item.status))}</span>` : ''}
+            ${codes.map(code => `<span class="tag">${highlight(code, phrases)}</span>`).join('')}
+          </div>
+          <div class="meta-grid">
+            <div class="meta-item"><span>發文／資料來源</span><strong>${escapeHtml(sourceName)}</strong></div>
+            <div class="meta-item"><span>公文文號</span><strong>${highlight(item.docNo || '未標示', phrases)}</strong></div>
+            ${item.date ? `<div class="meta-item"><span>日期</span><strong>${escapeHtml(asText(item.date))}</strong></div>` : ''}
+            ${codes.length ? `<div class="meta-item"><span>關聯碼別</span><strong>${codes.map(code => highlight(code, phrases)).join('、')}</strong></div>` : ''}
+          </div>
+          ${summary ? `<div class="summary">${highlight(summary, phrases)}</div>` : ''}
+          ${raw && normalize(raw) !== normalize(summary) ? `<details><summary>查看函釋全文</summary><div class="raw">${highlight(raw, phrases)}</div></details>` : ''}
+          ${renderSourceLink(item)}
+        </article>`;
+      };
+
+      const groupMarkup = (heading, icon, items, renderer, tokenSets) => items.length ? `
+        <section class="result-group">
+          <h2 class="group-heading"><span aria-hidden="true">${icon}</span>${heading}<span class="group-count">${items.length}</span></h2>
+          <div class="grid">${items.map(item => renderer(item, tokenSets)).join('')}</div>
+        </section>` : '';
+
+      const updateAddress = rawQuery => {
+        try {
+          const url = new URL(location.href);
+          if (rawQuery) url.searchParams.set('q', rawQuery);
+          else url.searchParams.delete('q');
+          history.replaceState(null, '', url);
+        } catch (_) {
+          // 在本機直接開啟檔案時，部分瀏覽器可能不允許更新網址；不影響搜尋。
+        }
+      };
+
+      const render = () => {
+        const rawQuery = q.value.trim();
+        clearButton.hidden = !rawQuery;
+        updateAddress(rawQuery);
+
+        if (!CODE_ROWS.length && !INTERPRETATION_ROWS.length) {
+          count.textContent = '';
+          expandedTerms.hidden = true;
+          results.innerHTML = '<div class="notice error"><strong>尚未載入法規資料。</strong><br />請確認 law/data.js 已與本頁放在同一個資料夾，並且包含 CODE_DATA 或 INTERPRETATIONS。</div>';
+          return;
+        }
+
+        if (!rawQuery) {
+          count.textContent = '';
+          expandedTerms.hidden = true;
+          results.innerHTML = '<div class="empty">輸入碼別、服務名稱或實務情境開始查詢。<br />多個詞請用空格分開，例如「據點 陪同外出」。</div>';
+          return;
+        }
+
+        const tokens = tokenize(rawQuery);
+        const tokenSets = tokens.map(alternativesFor);
+        const codeScores = CODE_ROWS.map(item => scoreItem(item, 'code', tokenSets, rawQuery));
+        const interpretationScores = INTERPRETATION_ROWS.map(item => scoreItem(item, 'interpretation', tokenSets, rawQuery));
+        const directCodes = codeScores.filter(result => result.coverage > 0);
+        const directInterpretations = interpretationScores.filter(result => result.coverage > 0);
+
+        const fullyMatchedCodes = directCodes.filter(result => result.coverage === tokens.length);
+        const fullyMatchedInterpretations = directInterpretations.filter(result => result.coverage === tokens.length);
+        const focusCodes = unique([
+          ...fullyMatchedCodes.flatMap(recordCodes),
+          ...fullyMatchedInterpretations.flatMap(recordCodes)
+        ]);
+
+        const codeMatches = codeScores
+          .filter(candidate => candidate.coverage > 0 || (focusCodes.length && overlaps(recordCodes(candidate), focusCodes)))
+          .map(candidate => {
+            const related = candidate.coverage < tokens.length && focusCodes.length && overlaps(recordCodes(candidate), focusCodes);
+            return related ? { ...candidate, related: true, score: candidate.score + 90 } : candidate;
+          });
+
+        const interpretationMatches = interpretationScores
+          .filter(candidate => candidate.coverage > 0 || (focusCodes.length && overlaps(recordCodes(candidate), focusCodes)))
+          .map(candidate => {
+            const related = candidate.coverage < tokens.length && focusCodes.length && overlaps(recordCodes(candidate), focusCodes);
+            return related ? { ...candidate, related: true, score: candidate.score + 90 } : candidate;
+          });
+
+        codeMatches.sort((a, b) => sortMatches(a, b, tokens.length));
+        interpretationMatches.sort((a, b) => sortMatches(a, b, tokens.length));
+
+        const shownCodes = codeMatches.slice(0, 30);
+        const shownInterpretations = interpretationMatches.slice(0, 30);
+        const completeCount = [...shownCodes, ...shownInterpretations].filter(item => item.coverage === tokens.length).length;
+
+        const expansions = tokenSets
+          .filter(set => set.length > 1)
+          .map(set => `${escapeHtml(set[0])} → ${set.slice(1).map(escapeHtml).join('、')}`);
+        expandedTerms.hidden = !expansions.length;
+        expandedTerms.innerHTML = expansions.length ? `同時比對常用相關詞：${expansions.join('；')}` : '';
+
+        if (!shownCodes.length && !shownInterpretations.length) {
+          count.innerHTML = `查詢「<strong>${escapeHtml(rawQuery)}</strong>」沒有找到結果。`;
+          results.innerHTML = '<div class="empty">可以改用碼別、較短的服務名稱、公文文號，或把多個詞分開搜尋。</div>';
+          return;
+        }
+
+        count.innerHTML = `查詢「<strong>${escapeHtml(rawQuery)}</strong>」：找到 <strong>${shownCodes.length}</strong> 筆給付規定、<strong>${shownInterpretations.length}</strong> 筆函釋／補充。`;
+        const partialNotice = tokens.length > 1 && completeCount === 0
+          ? '<div class="notice warning">目前沒有單筆資料同時包含全部關鍵字，以下先依符合詞數與關聯碼別排序顯示。建議也分別搜尋各關鍵字確認完整內容。</div>'
+          : '';
+
+        results.innerHTML = partialNotice
+          + groupMarkup('相關給付規定', '📘', shownCodes, renderCodeCard, tokenSets)
+          + groupMarkup('相關函釋與實務補充', '📄', shownInterpretations, renderInterpretationCard, tokenSets);
+      };
+
+      let inputTimer = 0;
+      q.addEventListener('input', () => {
+        window.clearTimeout(inputTimer);
+        inputTimer = window.setTimeout(render, 120);
+      });
+      q.addEventListener('keydown', event => {
+        if (event.key === 'Enter') render();
+        if (event.key === 'Escape') {
+          q.value = '';
+          render();
+        }
+      });
+      document.querySelector('#go').addEventListener('click', render);
+      clearButton.addEventListener('click', () => {
+        q.value = '';
+        render();
+        q.focus();
+      });
+      document.querySelectorAll('[data-query]').forEach(button => {
+        button.addEventListener('click', () => {
+          q.value = button.dataset.query || '';
+          render();
+          q.focus();
+        });
+      });
+
+      const totals = [
+        CODE_ROWS.length ? `${CODE_ROWS.length} 筆給付規定` : '',
+        INTERPRETATION_ROWS.length ? `${INTERPRETATION_ROWS.length} 筆函釋` : ''
+      ].filter(Boolean).join('、');
+      const version = META.version || META.updatedAt || META.lastUpdated || '未標示';
+      dataVersion.textContent = `給付規定版本：${asText(version)}${totals ? `；目前載入 ${totals}` : ''}`;
+
+      const formatSyncTime = value => {
+        if (!value) return '';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return asText(value);
+        return parsed.toLocaleString('zh-TW', {
+          timeZone: 'Asia/Taipei',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      };
+      const syncedAt = formatSyncTime(SYNC_META.syncedAt);
+      const sourceMode = asText(SYNC_META.mode) || '政府公開資料靜態整理';
+      syncStatus.textContent = `目前載入 ${INTERPRETATION_ROWS.length} 筆函釋；${sourceMode}${syncedAt ? `，整理日期：${syncedAt}` : ''}。搜尋本身不連線、不使用 AI Token。`;
+
+      try {
+        q.value = new URL(location.href).searchParams.get('q') || '';
+      } catch (_) {
+        q.value = '';
+      }
+      render();
+    })();
+  </script>
+</body>
+</html>
