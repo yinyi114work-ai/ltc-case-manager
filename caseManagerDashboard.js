@@ -16,6 +16,13 @@
   let selectedMonth = currentMonth;
   let visitFilter = 'all';
 
+  // GA4 only receives anonymous feature-use events. No case names, notes or visit content.
+  function cmTrack(name, params={}){
+    try{
+      if(typeof gtag==='function') gtag('event', name, Object.assign({feature_area:'casework'}, params));
+    }catch(e){}
+  }
+
   function defaultState(){
     return {version:1,cases:[],visits:[],todos:[],settings:{notificationEnabled:false}};
   }
@@ -180,7 +187,7 @@
     const openDate=document.getElementById('cmOpenDate').value;
     const prevHomeMonth=document.getElementById('cmPrevHomeMonth').value;
     if(!name||!openDate)return alert('請至少填寫個案名與開案日期。');
-    state.cases.push({id:uid('case'),name,openDate,prevHomeMonth,status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()});
+    state.cases.push({id:uid('case'),name,openDate,prevHomeMonth,status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()});cmTrack('case_added');
     document.getElementById('cmCaseName').value='';document.getElementById('cmPrevHomeMonth').value='';
     await save();
   }
@@ -195,26 +202,27 @@
     const id=document.getElementById('cmCloseConfirm').dataset.case;
     const c=state.cases.find(x=>x.id===id);if(!c)return;
     const date=document.getElementById('cmCloseDate').value;if(!date)return alert('請填寫結案日期。');
-    c.status='closed';c.closedDate=date;c.closeReason=document.getElementById('cmCloseReason').value;
+    c.status='closed';c.closedDate=date;c.closeReason=document.getElementById('cmCloseReason').value;cmTrack('case_closed');
     document.getElementById('cmCloseModal').classList.remove('show');await save();
   }
   async function setVisit(caseId,type,checked){
     state.visits=state.visits.filter(v=>!(v.caseId===caseId&&v.month===selectedMonth));
-    if(checked)state.visits.push({id:uid('visit'),caseId,month:selectedMonth,type,done:true,updatedAt:new Date().toISOString()});
+    if(checked){state.visits.push({id:uid('visit'),caseId,month:selectedMonth,type,done:true,updatedAt:new Date().toISOString()});cmTrack(type==='home'?'home_visit_completed':'phone_visit_completed');}
     await save();
   }
   async function addTodo(){
     const title=document.getElementById('cmTodoTitle').value.trim();if(!title)return alert('請輸入待辦事項。');
-    state.todos.push({id:uid('todo'),title,date:document.getElementById('cmTodoDate').value||todayISO,priority:document.getElementById('cmTodoPriority').value,note:document.getElementById('cmTodoNote').value.trim(),done:false});
+    state.todos.push({id:uid('todo'),title,date:document.getElementById('cmTodoDate').value||todayISO,priority:document.getElementById('cmTodoPriority').value,note:document.getElementById('cmTodoNote').value.trim(),done:false});cmTrack('todo_added');
     document.getElementById('cmTodoTitle').value='';document.getElementById('cmTodoNote').value='';await save();
   }
 
   function exportBackup(){
+    cmTrack('backup_exported');
     const payload={app:'Longcare.Notes 個管工作台',exportedAt:new Date().toISOString(),schemaVersion:1,data:state};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`LongcareNotes_個管工作台備份_${todayISO}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
   async function importBackup(file){
-    try{const raw=JSON.parse(await file.text());const incoming=raw?.data||raw;if(!incoming||!Array.isArray(incoming.cases)||!Array.isArray(incoming.visits)||!Array.isArray(incoming.todos))throw new Error('format');if(!confirm('匯入會以備份檔內容取代目前工作台資料，確定要繼續嗎？'))return;state=Object.assign(defaultState(),incoming);await save();alert('資料已成功匯入。');}catch(e){alert('無法匯入：備份檔格式不正確。');}
+    try{const raw=JSON.parse(await file.text());const incoming=raw?.data||raw;if(!incoming||!Array.isArray(incoming.cases)||!Array.isArray(incoming.visits)||!Array.isArray(incoming.todos))throw new Error('format');if(!confirm('匯入會以備份檔內容取代目前工作台資料，確定要繼續嗎？'))return;state=Object.assign(defaultState(),incoming);cmTrack('backup_imported');await save();alert('資料已成功匯入。');}catch(e){alert('無法匯入：備份檔格式不正確。');}
   }
   async function clearData(){if(!confirm('這會清除目前瀏覽器中的所有個管工作台資料。建議先匯出備份。確定清除嗎？'))return;if(!confirm('再次確認：清除後若沒有備份將無法復原。'))return;state=defaultState();await save();}
 
@@ -230,7 +238,7 @@
 
   function bind(){
     const tab=document.querySelector('.tab[data-target="casework"]');
-    tab?.addEventListener('click',()=>{showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
+    tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
     document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
     document.getElementById('cmDisclaimerClose').onclick=hideDisclaimer;
     document.getElementById('cmPrivacyOpen').onclick=()=>document.getElementById('cmDisclaimer').classList.add('show');
