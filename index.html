@@ -38,6 +38,7 @@
   <button class="tab" data-target="careplan">照顧計畫生成器</button>
   <button class="tab" data-target="renewal">換證檢核器</button>
   <button class="tab" data-target="phone">電訪輔助生成器</button>
+  <button class="tab" data-target="casework">個管工作台</button>
 </nav>
 <main class="container">
 <section id="quota" class="section active">
@@ -143,8 +144,92 @@
   </div>
   <h3 class="output-title">生成結果</h3><textarea id="phoneOut" class="big-output"></textarea><button onclick="copyText('phoneOut')" class="secondary" type="button">複製電訪紀錄</button>
 </section>
+
+<section id="casework" class="section cm-workspace">
+  <div class="cm-heading-row">
+    <div><h2>個管工作台</h2><p class="lead">自己的案量、每月家電訪、待辦與行事曆，集中在同一個地方。</p></div>
+    <button id="cmPrivacyOpen" class="secondary" type="button">資料與隱私說明</button>
+  </div>
+  <div id="cmStorageError" class="cm-storage-error">目前瀏覽器無法使用本機資料庫，請確認不是無痕模式或受限制的瀏覽環境。</div>
+  <div id="cmReminder" class="cm-reminder"></div>
+
+  <div class="panel cm-monthbar">
+    <label>檢視月份<input id="cmMonth" type="month"></label>
+    <button id="cmMonthToday" class="secondary" type="button">回到本月</button>
+    <div class="cm-monthbar-spacer"></div>
+    <button id="cmNotify" class="secondary" type="button">開啟待辦提醒</button>
+  </div>
+  <div id="cmStats" class="cm-stats"></div>
+
+  <div class="cm-subnav">
+    <a href="#cmCases">個案名單</a><a href="#cmVisits">每月家電訪</a><a href="#cmTodos">待辦事項</a><a href="#cmCalendarSection">行事曆</a><a href="#cmData">資料管理</a>
+  </div>
+
+  <section id="cmCases" class="panel cm-block">
+    <div class="cm-block-title"><div><h3>個案名單</h3><p>建立個案後，系統會依前次家訪月份推算下一次應家訪月份。</p></div></div>
+    <div class="cm-form-grid cm-case-form">
+      <label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label>
+      <label>開案日期<input id="cmOpenDate" type="date"></label>
+      <label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label>
+      <button id="cmAddCase" class="primary" type="button">＋加入個案</button>
+    </div>
+    <div class="cm-list-tools"><input id="cmCaseSearch" placeholder="搜尋個案名"><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案個案</label></div>
+    <div id="cmCaseList"></div>
+  </section>
+
+  <section id="cmVisits" class="panel cm-block">
+    <div class="cm-block-title"><div><h3>每月家／電訪</h3><p>家訪與電訪採互斥勾選；完成家訪後，系統會從該月重新推算下一次應家訪月份。</p></div></div>
+    <div id="cmVisitSummary" class="cm-visit-summary"></div>
+    <div id="cmVisitFilters" class="cm-filter-row"><button class="secondary active" data-filter="all">全部</button><button class="secondary" data-filter="pending">未完成</button><button class="secondary" data-filter="home">應家訪</button><button class="secondary" data-filter="phone">應電訪</button><button class="secondary" data-filter="done">已完成</button></div>
+    <div id="cmVisitTable"></div>
+  </section>
+
+  <div class="cm-two-col">
+    <section id="cmTodos" class="panel cm-block">
+      <div class="cm-block-title"><div><h3>待辦事項</h3><p>可設定日期、優先度與備註，完成後直接勾選。</p></div></div>
+      <div class="cm-todo-form"><label>待辦事項<input id="cmTodoTitle" placeholder="例：完成王○○計畫異動"></label><label>日期<input id="cmTodoDate" type="date"></label><label>優先度<select id="cmTodoPriority"><option value="high">重要</option><option value="normal" selected>一般</option><option value="low">稍後</option></select></label><label>備註<input id="cmTodoNote" placeholder="可留空"></label><button id="cmAddTodo" class="primary" type="button">加入待辦</button></div>
+      <div id="cmTodoList" class="cm-todo-list"></div>
+    </section>
+
+    <section id="cmCalendarSection" class="panel cm-block">
+      <div class="cm-block-title"><div><h3>行事曆</h3><p>目前先顯示待辦事項；切換上方月份即可查看其他月份。</p></div></div>
+      <div id="cmCalendar"></div>
+    </section>
+  </div>
+
+  <section id="cmData" class="panel cm-block cm-data-block">
+    <div class="cm-block-title"><div><h3>資料管理</h3><p>資料只存在目前裝置與瀏覽器。換電腦、換瀏覽器或清除網站資料前，請先匯出備份。</p></div></div>
+    <div class="cm-data-actions"><button id="cmExport" class="primary" type="button">匯出完整備份</button><label class="secondary cm-file-label">匯入備份<input id="cmImport" type="file" accept="application/json"></label><button id="cmClear" class="secondary danger-outline" type="button">清除本機資料</button></div>
+    <div class="cm-local-note"><strong>這個工作台不使用 AI。</strong>新增個案、勾選家電訪、案量統計、待辦、行事曆與備份皆在瀏覽器本機處理，不會因使用這些功能而產生 AI 使用量。</div>
+  </section>
+</section>
+
+<div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
+  <div class="cm-modal-card cm-disclaimer-card">
+    <h2 id="cmDisclaimerTitle">使用前請先了解資料儲存方式</h2>
+    <div class="cm-disclaimer-points">
+      <div><b>資料存在本機</b><span>你輸入的個案名單、家電訪、待辦與行事曆資料，儲存在目前使用的裝置與瀏覽器中。</span></div>
+      <div><b>長照研究室不保存個案資料</b><span>工作台不會主動把你輸入的個案資料傳送給長照研究室、AI 或雲端資料庫。</span></div>
+      <div><b>不消耗 AI 使用量</b><span>工作台的案量統計、勾選、提醒、匯入與匯出皆為本機功能。</span></div>
+      <div><b>請記得備份</b><span>更換裝置、瀏覽器，或清除網站資料時，本機資料可能消失，請定期使用「匯出完整備份」。</span></div>
+    </div>
+    <p class="cm-legal-note">本工具為個人工作輔助工具。使用者仍應依所屬機構之個人資料保護與資訊安全規範使用；建議避免於共用或不受信任的裝置輸入可直接識別個案身分的資料。裝置本身、瀏覽器外掛或其他第三方環境所造成的資訊安全風險，不在本工具可控制範圍內。</p>
+    <div class="cm-modal-actions"><button id="cmDisclaimerClose" class="secondary" type="button">稍後再看</button><button id="cmDisclaimerAccept" class="primary" type="button">我已了解並開始使用</button></div>
+  </div>
+</div>
+
+<div id="cmCloseModal" class="cm-modal" role="dialog" aria-modal="true">
+  <div class="cm-modal-card">
+    <h3>個案結案</h3><p>個案：<strong id="cmCloseCaseName"></strong></p>
+    <label>結案日期<input id="cmCloseDate" type="date"></label>
+    <label>結案原因<select id="cmCloseReason"><option value="">不填寫</option><option>死亡</option><option>入住住宿機構</option><option>遷出服務區</option><option>資格不符</option><option>三個月未使用且無意願</option><option>其他</option></select></label>
+    <p class="cm-legal-note">結案不會刪除過去的家電訪紀錄；結案後的月份不再列入應訪名單。</p>
+    <div class="cm-modal-actions"><button id="cmCloseCancel" class="secondary" type="button">取消</button><button id="cmCloseConfirm" class="primary" type="button">確認結案</button></div>
+  </div>
+</div>
+
 </main>
 <footer>© Longcare.Notes｜長照研究室｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
-<script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script>
+<script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=18.0"></script>
 </body>
 </html>
