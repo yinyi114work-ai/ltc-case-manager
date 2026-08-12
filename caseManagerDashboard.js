@@ -80,7 +80,7 @@
     document.getElementById('cmStats').innerHTML=`
       <div class="cm-stat"><span>目前在案</span><b>${active}</b><small>案</small></div>
       <div class="cm-stat"><span>${monthLabel(selectedMonth)}新案</span><b>${opens}</b><small>結案 ${closes}｜淨 ${opens-closes>=0?'+':''}${opens-closes}</small></div>
-      <div class="cm-stat"><span>本月應訪</span><b>${monthCases.length}</b><small>家訪 ${homeDue}｜電訪 ${monthCases.length-homeDue}</small></div>
+      <div class="cm-stat"><span>本月應家訪</span><b>${homeDue}</b><small>應電訪 ${monthCases.length-homeDue}</small></div>
       <div class="cm-stat ${pending?'attention':''}"><span>尚未完成</span><b>${pending}</b><small>已完成 ${done}｜${monthCases.length?Math.round(done/monthCases.length*100):0}%</small></div>`;
   }
 
@@ -89,12 +89,26 @@
     const q=(document.getElementById('cmCaseSearch')?.value||'').trim().toLowerCase();
     const showClosed=document.getElementById('cmShowClosed')?.checked;
     let list=state.cases.filter(c=>(showClosed||activeNow(c))&&(!q||c.name.toLowerCase().includes(q)));
-    list.sort((a,b)=>Number(activeNow(b))-Number(activeNow(a))||a.name.localeCompare(b.name,'zh-Hant'));
+    // 個案名單排序：本月應家訪且尚未完成 → 其他尚未完成 → 已完成 → 已結案。
+    // 「本月應訪」在這裡專指依家訪週期，本月應安排家訪的個案。
+    const rankCase=c=>{
+      if(!caseActiveDuringMonth(c,selectedMonth)) return activeNow(c)?3:4;
+      const done=completion(c,selectedMonth);
+      const homeDue=expectedVisitType(c,selectedMonth)==='home';
+      if(homeDue&&!done) return 0;
+      if(!done) return 1;
+      return 2;
+    };
+    list.sort((a,b)=>rankCase(a)-rankCase(b)||a.name.localeCompare(b.name,'zh-Hant'));
     if(!list.length){el.innerHTML='<div class="cm-empty">尚無符合的個案。</div>';return;}
     el.innerHTML=`<div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>個案名</th><th>開案日</th><th>前次家訪</th><th>下次應家訪</th><th>狀態</th><th>操作</th></tr></thead><tbody>${list.map(c=>{
       const last=latestHomeMonth(c);
       const next=last?addMonths(last,6):(c.openDate?.slice(0,7)||'');
-      return `<tr data-case="${c.id}" class="${activeNow(c)?'':'cm-closed'}"><td><strong>${esc(c.name)}</strong></td><td>${esc(c.openDate)}</td><td>${last?monthLabel(last):'—'}</td><td>${next?monthLabel(next):'—'}</td><td>${activeNow(c)?'<span class="cm-badge active">在案</span>':`<span class="cm-badge closed">已結案</span><div class="cm-small">${esc(c.closedDate||'')}</div>`}</td><td class="cm-actions">${activeNow(c)?`<button class="secondary cm-small-btn" data-action="closeCase">結案</button>`:`<button class="secondary cm-small-btn" data-action="restoreCase">恢復在案</button>`}<button class="cm-link danger" data-action="deleteCase">刪除</button></td></tr>`;
+      const activeInMonth=caseActiveDuringMonth(c,selectedMonth);
+      const homeDue=activeInMonth&&expectedVisitType(c,selectedMonth)==='home';
+      const done=activeInMonth&&completion(c,selectedMonth);
+      const dueBadge=homeDue?` <span class="cm-badge home">本月應訪${done?'・已完成':''}</span>`:'';
+      return `<tr data-case="${c.id}" class="${activeNow(c)?'':'cm-closed'}"><td><strong>${esc(c.name)}</strong>${dueBadge}</td><td>${esc(c.openDate)}</td><td>${last?monthLabel(last):'—'}</td><td>${next?monthLabel(next):'—'}</td><td>${activeNow(c)?'<span class="cm-badge active">在案</span>':`<span class="cm-badge closed">已結案</span><div class="cm-small">${esc(c.closedDate||'')}</div>`}</td><td class="cm-actions">${activeNow(c)?`<button class="secondary cm-small-btn" data-action="closeCase">結案</button>`:`<button class="secondary cm-small-btn" data-action="restoreCase">恢復在案</button>`}<button class="cm-link danger" data-action="deleteCase">刪除</button></td></tr>`;
     }).join('')}</tbody></table></div>`;
   }
 
@@ -105,7 +119,12 @@
       const expected=expectedVisitType(c,selectedMonth);
       const done=!!v?.done;
       return {c,v,expected,done};
-    }).filter(x=>visitFilter==='all'||(visitFilter==='pending'&&!x.done)||(visitFilter==='home'&&x.expected==='home')||(visitFilter==='phone'&&x.expected==='phone')||(visitFilter==='done'&&x.done));
+    }).filter(x=>visitFilter==='all'||(visitFilter==='pending'&&!x.done)||(visitFilter==='home'&&x.expected==='home')||(visitFilter==='phone'&&x.expected==='phone')||(visitFilter==='done'&&x.done))
+      .sort((a,b)=>{
+        // 本月應家訪且未完成最優先，其次其他未完成；已完成自動往後。
+        const rank=x=>!x.done&&x.expected==='home'?0:!x.done?1:2;
+        return rank(a)-rank(b)||a.c.name.localeCompare(b.c.name,'zh-Hant');
+      });
     const total=cases.length,doneCount=cases.filter(c=>completion(c,selectedMonth)).length;
     document.getElementById('cmVisitSummary').innerHTML=`<b>${monthLabel(selectedMonth)}</b>　應訪 <strong>${total}</strong>　已完成 <strong>${doneCount}</strong>　未完成 <strong class="${total-doneCount?'cm-warn-text':''}">${total-doneCount}</strong>　完成率 <strong>${total?Math.round(doneCount/total*100):0}%</strong>`;
     const el=document.getElementById('cmVisitTable');
