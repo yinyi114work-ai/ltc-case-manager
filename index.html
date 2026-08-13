@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Longcare.Notes｜居家督導輔助小工具</title>
-  <link rel="stylesheet" href="style.css" />
-  <!-- Google tag (gtag.js) -->
+  <title>Longcare.Notes｜長照研究室</title>
+  <link rel="stylesheet" href="style.css?v=17.7" />
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -13,686 +13,225 @@
     gtag('js', new Date());
     gtag('config', 'G-6H934JVD52');
   </script>
-
-  <style>
-    .brand-subtitle{
-      margin:.35rem 0 .2rem;
-      font-weight:700;
-      letter-spacing:.02em;
-    }
-    .tool-page-title{
-      margin:.25rem 0 .45rem;
-      font-size:clamp(1.35rem,4vw,2rem);
-    }
-    .law-shortcut{
-      max-width:1180px;
-      margin:18px auto 10px;
-      padding:0 16px;
-    }
-    .law-shortcut-link{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      padding:16px 18px;
-      border-radius:18px;
-      background:#fff8ec;
-      border:1px solid #ead8b9;
-      box-shadow:0 5px 16px rgba(72,57,33,.08);
-      color:inherit;
-      text-decoration:none;
-      transition:transform .18s ease, box-shadow .18s ease;
-    }
-    .law-shortcut-link:hover,
-    .law-shortcut-link:focus-visible{
-      transform:translateY(-1px);
-      box-shadow:0 8px 20px rgba(72,57,33,.12);
-      outline:none;
-    }
-    .law-shortcut-icon{
-      font-size:1.9rem;
-      line-height:1;
-      flex:0 0 auto;
-    }
-    .law-shortcut-copy{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width:0;
-    }
-    .law-shortcut-copy strong{
-      font-size:1.08rem;
-    }
-    .law-shortcut-copy span{
-      line-height:1.55;
-      opacity:.82;
-    }
-    .law-shortcut-arrow{
-      margin-left:auto;
-      font-size:1.35rem;
-      font-weight:800;
-      flex:0 0 auto;
-    }
-    @media (max-width:640px){
-      .law-shortcut{
-        margin-top:12px;
-      }
-      .law-shortcut-link{
-        align-items:flex-start;
-        padding:15px;
-      }
-      .law-shortcut-copy span{
-        font-size:.93rem;
-      }
-    }
-  </style>
-
 </head>
 <body>
-  <header class="hero final-hero">
-    <div class="brand-logo-wrap" aria-label="長照研究室 Logo">
-      <img class="brand-logo-img" src="logo.png" alt="Longcare.Notes 長照研究室 Logo" />
-    </div>
-    <h1>Longcare.Notes</h1>
-    <p class="brand-subtitle">長照研究室｜給長照人的萬能工具箱</p>
-    <h2 class="tool-page-title">居家督導輔助小工具</h2>
-    <p class="hero-text">額度計算｜碼別查詢｜費用預估｜家訪紀錄生成｜異動通報產生｜換證檢核</p>
-    <p class="source-note">資料基礎：115年度長期照顧服務申請及給付辦法附表。金額採小數點後無條件捨去。</p>
-  </header>
+<header class="hero">
+  <img src="logo.png" alt="長照研究室 Logo" class="logo" />
+  <h1>Longcare.Notes</h1>
+  <p>長照研究室｜給長照人的免費工具箱</p>
+  <small>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助<br>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。</small>
+</header>
 
-  <section class="law-shortcut" aria-label="長照法規速查入口">
-    <a href="./law/" class="law-shortcut-link">
-      <div class="law-shortcut-icon" aria-hidden="true">📚</div>
-      <div class="law-shortcut-copy">
-        <strong>長照法規速查</strong>
-        <span>輸入 BA13、AA01 或服務關鍵字，快速查看現行規定、相關函示與官方來源。</span>
-      </div>
-      <div class="law-shortcut-arrow" aria-hidden="true">→</div>
-    </a>
+<section aria-label="長照法規速查入口" style="max-width:1100px;margin:16px auto 8px;padding:0 16px;">
+  <a href="./law/" style="display:block;text-decoration:none;color:inherit;background:#fff8ec;border:1px solid #e8d8bd;border-radius:18px;padding:18px 20px;box-shadow:0 4px 14px rgba(75,60,35,.08);">
+    <div style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">📚 長照法規速查</div>
+    <div style="line-height:1.6;">輸入 BA13、AA01 或服務關鍵字，快速查看現行規定、相關函示與官方來源。</div>
+    <div style="margin-top:10px;font-weight:700;">立即查詢 →</div>
+  </a>
+</section>
+
+<nav class="tabs">
+  <button class="tab active" data-target="quota">額度計算器</button>
+  <button class="tab" data-target="codes">碼別介紹</button>
+  <button class="tab" data-target="atlas">輔具及無障礙圖鑑</button>
+  <button class="tab" data-target="fee">民眾自付試算</button>
+  <button class="tab" data-target="careplan">照顧計畫生成器</button>
+  <button class="tab" data-target="renewal">換證檢核器</button>
+  <button class="tab" data-target="phone">電訪輔助生成器</button>
+  <button class="tab" data-target="casework">個管工作台</button>
+</nav>
+<main class="container">
+<section id="quota" class="section active">
+  <h2>額度計算器</h2>
+  <div class="panel grid4">
+    <label>CMS等級<select id="qLevel"></select></label>
+    <label>開案日期<input id="qDate" type="date"></label>
+    <label>是否聘有外籍看護工<select id="qForeign"><option value="no">否</option><option value="yes">是</option></select></label>
+    <label>交通接送區域<select id="qTransport"></select></label>
+  </div>
+  <div id="quotaOut" class="quota-grid"></div>
+</section>
+<section id="codes" class="section">
+  <h2>碼別介紹</h2>
+  <p class="lead">保留支付基準說明、第一類/第二類/第三類金額、個管翻譯機與注意事項。輔具及居家無障礙請至「輔具及無障礙圖鑑」查詢。</p>
+  <div class="panel sticky-tools">
+    <input id="serviceSearch" placeholder="搜尋碼別或關鍵字，例如 BA07、沐浴、GA09、AA02" />
+    <div class="subtabs">
+      <button class="subtab active" data-cat="care">照顧及專業/喘息</button>
+      <button class="subtab" data-cat="transport">交通接送</button>
+      <button class="subtab" data-cat="aa">AA照顧管理</button>
+    </div>
+  </div>
+  <div id="serviceList" class="service-list"></div>
+</section>
+
+<section id="atlas" class="section">
+  <h2>輔具及居家無障礙圖鑑</h2>
+  <p class="lead">依支付基準 E／F／EI 品項建立，可搜尋名稱或代碼。圖片為家訪說明用的實體示意圖，實際補助仍依評估結果與地方政府公告辦理。</p>
+  <div class="panel sticky-tools atlas-tools">
+    <input id="atlasSearch" placeholder="搜尋輔具名稱或代碼，例如：輪椅、EC01、扶手、FA22" />
+    <div class="subtabs atlas-tabs">
+      <button class="atlas-tab active" data-atlas="all">全部</button>
+      <button class="atlas-tab" data-atlas="mobility">行動輔具</button>
+      <button class="atlas-tab" data-atlas="bath">沐浴與如廁</button>
+      <button class="atlas-tab" data-atlas="bedmove">床類與移位</button>
+      <button class="atlas-tab" data-atlas="life">生活與科技輔具</button>
+      <button class="atlas-tab" data-atlas="home">居家無障礙</button>
+    </div>
+  </div>
+  <div id="atlasList" class="atlas-list"></div>
+</section>
+
+<section id="fee" class="section">
+  <h2>民眾自付試算</h2>
+  <div class="panel grid3">
+    <label>CMS等級<select id="feeCms"></select></label>
+    <label>身分別<select id="feeIdentity"><option value="first">第一類</option><option value="second">第二類</option><option value="third">第三類</option></select></label>
+    <button id="addFeeRow" class="primary" type="button">＋新增碼別</button>
+  </div>
+  <div id="feeRows" class="fee-rows"></div>
+  <div class="result-grid">
+    <div class="result"><span>預估使用額度</span><b id="feeTotal">$0</b></div>
+    <div class="result"><span>CMS可用額度</span><b id="feeQuota">$0</b></div>
+    <div class="result"><span>部分負擔</span><b id="feeSelfPay">$0</b></div>
+    <div class="result"><span>超額自費</span><b id="feeOverage">$0</b></div>
+    <div class="result highlight"><span>預估自付總額</span><b id="feeClientTotal">$0</b></div>
+    <div class="result"><span>剩餘額度</span><b id="feeRemain">$0</b></div>
+  </div>
+  <div id="feeNotice" class="notice success">尚未超出 CMS 額度。</div>
+</section>
+<section id="careplan" class="section">
+  <h2>照顧計畫生成器</h2>
+  <p class="lead">輸入集中在上方；生成結果在最下方。格式依照你提供的照顧計畫範例。</p>
+  <div class="panel">
+    <h3>一、基本資料</h3>
+    <div class="grid4">
+      <label>個案姓名/代稱<input id="cpName"></label>
+      <label>家訪日期<input id="cpDate" type="date"></label>
+      <label>家訪時間<input id="cpTime" type="time"></label>
+      <label>討論對象<input id="cpPeople" placeholder="例：案女、案長子、個案本人"></label>
+    </div>
+    <h3>二、個案狀況</h3><div id="cpChecks" class="input-groups"></div><label>個案狀況補充<textarea id="cpHealthNote"></textarea></label>
+    <h3>三、家庭支持與照顧者</h3><div id="cpFamily" class="input-groups"></div><label>家庭支持補充<textarea id="cpFamilyNote"></textarea></label>
+    <h3>四、環境與輔具評估</h3><div id="cpEnv" class="input-groups"></div><label>環境與輔具補充<textarea id="cpEnvNote"></textarea></label>
+    <h3>五、照顧問題與目標</h3><div id="cpProblems" class="input-groups"></div>
+    <div class="grid3"><label>短期目標<input id="cpGoalS"></label><label>中期目標<input id="cpGoalM"></label><label>長期目標<input id="cpGoalL"></label></div>
+    <h3>六、照顧計畫</h3>
+    <div class="grid2"><label>照顧及專業服務<textarea id="cpCare"></textarea></label><label>交通接送<textarea id="cpTransport"></textarea></label><label>輔具及無障礙<textarea id="cpAssist"></textarea></label><label>喘息/短照<textarea id="cpRespite"></textarea></label><label>轉介其他資源<textarea id="cpResource"></textarea></label><label>擬定計畫和實際使用服務的落差<textarea id="cpGap"></textarea></label></div>
+    <button id="genCarePlan" class="primary" type="button">生成照顧計畫</button>
+  </div>
+  <h3 class="output-title">生成結果</h3><textarea id="careplanOut" class="big-output"></textarea><button onclick="copyText('careplanOut')" class="secondary" type="button">複製照顧計畫</button>
+</section>
+<section id="renewal" class="section">
+  <h2>長照小卡換證檢核器</h2>
+  <div class="panel">
+    <div class="grid4"><label>小卡生效日<input id="renewStart" type="date"></label><label>小卡到期日<input id="renewEnd" type="date"></label><label>六年總積分<input id="renewTotal" type="number" step="0.5"></label><label>網路課程積分<input id="renewOnline" type="number" step="0.5"></label></div>
+    <div class="grid4"><label>專業品質<input id="rq" type="number" step="0.5"></label><label>專業倫理<input id="re" type="number" step="0.5"></label><label>專業法規<input id="rl" type="number" step="0.5"></label><label>消防/緊急/感染/性別合計<input id="rsafe" type="number" step="0.5"></label></div>
+    <h3>原民／多元課程</h3><div id="cultureRows"></div><button id="addCulture" class="secondary" type="button">＋新增課程</button>
+    <button id="checkRenewal" class="primary" type="button">檢核換證資格</button>
+  </div>
+  <h3 class="output-title">檢核結果</h3><textarea id="renewalOut" class="big-output"></textarea><button onclick="copyText('renewalOut')" class="secondary" type="button">複製結果</button>
+</section>
+<section id="phone" class="section">
+  <h2>電訪輔助生成器</h2>
+  <p class="lead">以問卷/checkbox方式選擇本次電訪內容；不列全部碼別。</p>
+  <div class="panel">
+    <div class="grid4"><label>電訪日期<input id="phDate" type="date"></label><label>電訪時間<input id="phTime" type="time"></label><label>聯繫方式<select id="phMethod"><option>電話</option><option>LINE</option><option>視訊</option><option>其他</option></select></label><label>聯繫對象<input id="phPerson" placeholder="例：案女、案長子、案母"></label></div>
+    <div class="grid3"><label>紀錄風格<select id="phStyle"><option value="short">簡短版</option><option value="normal" selected>標準版</option><option value="full">完整版</option></select></label></div>
+    <h3>本次電訪主題</h3><div id="phoneChecks" class="input-groups"></div>
+    <div class="grid3"><label>個案體況補充<textarea id="phBodyNote"></textarea></label><label>服務追蹤補充<textarea id="phServiceNote"></textarea></label><label>滿意度/後續處置<textarea id="phSatisNote"></textarea></label></div>
+    <button id="genPhone" class="primary" type="button">生成電訪紀錄</button>
+  </div>
+  <h3 class="output-title">生成結果</h3><textarea id="phoneOut" class="big-output"></textarea><button onclick="copyText('phoneOut')" class="secondary" type="button">複製電訪紀錄</button>
+</section>
+
+<section id="casework" class="section cm-workspace">
+  <div class="cm-heading-row">
+    <div><h2>個管工作台</h2><p class="lead">自己的案量、每月家電訪、待辦與行事曆，集中在同一個地方。</p></div>
+    <button id="cmPrivacyOpen" class="secondary" type="button">資料與隱私說明</button>
+  </div>
+  <div id="cmStorageError" class="cm-storage-error">目前瀏覽器無法使用本機資料庫，請確認不是無痕模式或受限制的瀏覽環境。</div>
+  <div id="cmReminder" class="cm-reminder"></div>
+
+  <div class="panel cm-monthbar">
+    <label>檢視月份<input id="cmMonth" type="month"></label>
+    <button id="cmMonthToday" class="secondary" type="button">回到本月</button>
+    <div class="cm-monthbar-spacer"></div>
+    <button id="cmNotify" class="secondary" type="button">開啟待辦提醒</button>
+  </div>
+  <div id="cmStats" class="cm-stats"></div>
+
+  <div class="cm-subnav">
+    <a href="#cmCases">個案名單</a><a href="#cmVisits">每月家電訪</a><a href="#cmTodos">待辦事項</a><a href="#cmCalendarSection">行事曆</a><a href="#cmData">資料管理</a>
+  </div>
+
+  <section id="cmCases" class="panel cm-block">
+    <div class="cm-block-title"><div><h3>個案名單</h3><p>建立個案後，系統會依前次家訪月份推算下一次應家訪月份。</p></div><div class="cm-title-actions"><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx"></label></div></div>
+    <div class="cm-form-grid cm-case-form">
+      <label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label>
+      <label>開案日期<input id="cmOpenDate" type="date"></label>
+      <label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label>
+      <button id="cmAddCase" class="primary" type="button">＋加入個案</button>
+    </div>
+    <div class="cm-list-tools"><input id="cmCaseSearch" placeholder="搜尋個案名"><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案個案</label></div>
+    <div id="cmCaseList"></div>
   </section>
 
+  <section id="cmVisits" class="panel cm-block">
+    <div class="cm-block-title"><div><h3>每月家／電訪</h3><p>家訪與電訪採互斥勾選；完成家訪後，系統會從該月重新推算下一次應家訪月份。</p></div></div>
+    <div id="cmVisitSummary" class="cm-visit-summary"></div>
+    <div id="cmVisitFilters" class="cm-filter-row"><button class="secondary active" data-filter="all">全部</button><button class="secondary" data-filter="pending">未完成</button><button class="secondary" data-filter="home">應家訪</button><button class="secondary" data-filter="phone">應電訪</button><button class="secondary" data-filter="done">已完成</button></div>
+    <div id="cmVisitTable"></div>
+  </section>
 
-  <nav class="tool-tabs">
-    <button class="tab-btn" data-target="supervisorTool">居督工作台</button>
-    <button class="tab-btn active" data-target="quotaTool">額度計算器</button>
-    <button class="tab-btn" data-target="codeTool">碼別介紹</button>
-    <button class="tab-btn" data-target="feeTool">服務費用預估</button>
-    <button class="tab-btn" data-target="visitTool">家訪紀錄生成器</button>
-    <button class="tab-btn" data-target="mutationTool">異動通報產生器</button>
-    <button class="tab-btn" data-target="renewalTool">換證檢核器</button>
-  </nav>
-
-  <main class="container">
-    <section id="supervisorTool" class="tool-section">
-      <div class="section-title supervisor-section-title">
-        <div>
-          <h2>居督工作台</h2>
-          <p>待辦、行事曆與個案家訪追蹤集中在同一頁；資料僅儲存在目前裝置的瀏覽器。</p>
-        </div>
-        <div class="supervisor-header-actions">
-          <button id="supervisorShowAll" class="secondary-btn" type="button">顯示全部</button>
-          <button id="supervisorAddTask" class="primary-btn" type="button">＋新增待辦</button>
-          <button id="supervisorDownloadTemplate" class="secondary-btn" type="button" hidden>下載名單範本</button>
-          <button id="supervisorImportCases" class="secondary-btn" type="button" hidden>匯入名單</button>
-          <button id="supervisorAddCase" class="primary-btn" type="button" hidden>＋新增個案</button>
-          <input id="supervisorCaseFile" type="file" accept=".xlsx,.xls,.csv" hidden>
-        </div>
-      </div>
-
-      <div class="supervisor-mode-switch" role="tablist" aria-label="居督工作台模式">
-        <button class="supervisor-mode-btn active" data-supervisor-view="tasks" type="button">待辦・行事曆</button>
-        <button class="supervisor-mode-btn" data-supervisor-view="cases" type="button">個案管理</button>
-      </div>
-
-      <div id="supervisorTaskView">
-        <div class="supervisor-dashboard">
-          <div class="supervisor-task-panel">
-            <div id="supervisorStats" class="supervisor-stats"></div>
-
-            <div id="supervisorTaskForm" class="card supervisor-task-form" hidden>
-              <div class="supervisor-form-heading">
-                <h3 id="supervisorFormTitle">新增待辦</h3>
-                <button id="supervisorCloseForm" class="icon-btn" type="button" aria-label="關閉新增待辦">×</button>
-              </div>
-              <input id="supervisorTaskId" type="hidden">
-              <input id="supervisorTaskCaseId" type="hidden">
-              <div class="grid-2">
-                <label>事項類型
-                  <select id="supervisorTaskType">
-                    <option value="shift">找代班</option><option value="medical">陪同就醫人力</option><option value="supervision">居服員個督</option><option value="homevisit">家訪</option><option value="phonevisit">電訪</option><option value="mutation">異動通報</option><option value="meeting">會議紀錄</option><option value="discussion">個案討論</option><option value="callback">回電</option><option value="other">其他</option>
-                  </select>
-                </label>
-                <label>個案／事項名稱<input id="supervisorTaskSubject" maxlength="60" placeholder="例如：王阿姨、八月聯繫會議"></label>
-                <label>日期<input id="supervisorTaskDate" type="date"></label>
-                <label>開始時間<input id="supervisorTaskStartTime" type="time"></label>
-                <label>結束時間<input id="supervisorTaskEndTime" type="time"></label>
-                <label>緊急程度<select id="supervisorTaskPriority"><option value="urgent">急</option><option value="normal" selected>一般</option><option value="low">不急</option></select></label>
-                <label>狀態<select id="supervisorTaskStatus"><option value="pending">待處理</option><option value="done">已完成</option></select></label>
-                <label class="grid-full">已詢問人員<textarea id="supervisorTaskAsked" maxlength="500" placeholder="例如：王小美－無法、林佳怡－待回覆、陳阿華－可代班"></textarea></label>
-              </div>
-              <label>備註<textarea id="supervisorTaskNote" maxlength="300" placeholder="例如：原居服員請假、BA14、需輪椅交通安排"></textarea></label>
-              <div class="button-row"><button id="supervisorSaveTask" class="primary-btn" type="button">儲存待辦</button><button id="supervisorCancelTask" class="ghost-btn" type="button">取消</button></div>
-            </div>
-
-            <div class="supervisor-list-toolbar">
-              <div><strong id="supervisorListTitle">全部待辦</strong><span id="supervisorSelectedDateLabel"></span></div>
-              <label class="supervisor-completed-toggle"><input id="supervisorShowCompleted" type="checkbox"> 顯示已完成</label>
-            </div>
-            <div id="supervisorTaskList" class="supervisor-task-list"></div>
-          </div>
-
-          <aside class="calendar-card">
-            <div class="calendar-header"><button id="calendarPrev" class="icon-btn" type="button" aria-label="上個月">‹</button><h3 id="calendarTitle"></h3><button id="calendarNext" class="icon-btn" type="button" aria-label="下個月">›</button></div>
-            <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
-            <div id="supervisorCalendar" class="supervisor-calendar"></div>
-            <div class="calendar-legend"><span><i class="legend-dot urgent"></i>急</span><span><i class="legend-dot normal"></i>一般</span><span><i class="legend-dot low"></i>不急</span></div>
-            <p class="small-note">點選日期可只查看當日事項；再次按「顯示全部」即可回到完整清單。</p>
-          </aside>
-        </div>
-      </div>
-
-      <div id="supervisorCaseView" hidden>
-        <div id="supervisorCaseStats" class="supervisor-stats supervisor-case-stats"></div>
-        <div class="card supervisor-case-toolbar">
-          <input id="supervisorCaseSearch" class="search-input" placeholder="搜尋個案、居服員或服務時間">
-          <select id="supervisorCaseFilter"><option value="all">全部狀態</option><option value="active">服務中</option><option value="paused">暫停服務</option><option value="closed">已結案</option></select>
-        </div>
-
-        <div id="supervisorCaseForm" class="card supervisor-task-form" hidden>
-          <div class="supervisor-form-heading"><h3 id="supervisorCaseFormTitle">新增個案</h3><button id="supervisorCloseCaseForm" class="icon-btn" type="button" aria-label="關閉個案表單">×</button></div>
-          <input id="supervisorCaseId" type="hidden">
-          <div class="grid-2">
-            <label>個案姓名<input id="supervisorCaseName" maxlength="40" placeholder="例如：王小明"></label>
-            <label>開始服務日<input id="supervisorCaseStartDate" type="date"></label>
-            <label>居服員<input id="supervisorCaseWorker" maxlength="60" placeholder="例如：陳小美"></label>
-            <label>服務狀態<select id="supervisorCaseStatus"><option value="active">服務中</option><option value="paused">暫停服務</option><option value="closed">已結案</option></select></label>
-            <label class="grid-full">服務時間／型態<input id="supervisorCaseSchedule" maxlength="120" placeholder="例如：週一、三、五 09:00–11:00"></label>
-            <label>最近一次家訪日<input id="supervisorCaseLastVisit" type="date"><span class="field-hint">儲存後自動計算 3 個月後的下次家訪期限</span></label>
-            <label class="grid-full">備註<textarea id="supervisorCaseNote" maxlength="300" placeholder="只記需要提醒自己的重點即可"></textarea></label>
-          </div>
-          <div class="button-row"><button id="supervisorSaveCase" class="primary-btn" type="button">儲存個案</button><button id="supervisorCancelCase" class="ghost-btn" type="button">取消</button></div>
-        </div>
-
-        <div class="supervisor-case-help"><strong>家訪規則：</strong>最近一次家訪日＋3個月＝下次家訪期限。按「安排家訪」會直接加入上方行事曆；從行事曆完成該筆家訪，也會同步更新個案家訪日期。</div>
-        <div id="supervisorCaseList" class="supervisor-case-list"></div>
-      </div>
-
-      <div id="supervisorCompleteModal" class="supervisor-modal" hidden>
-        <div class="supervisor-modal-backdrop" data-close-complete-modal></div>
-        <div class="supervisor-modal-card" role="dialog" aria-modal="true" aria-labelledby="supervisorCompleteTitle">
-          <h3 id="supervisorCompleteTitle">完成確認</h3><p id="supervisorCompleteSubject" class="hint-text"></p><input id="supervisorCompleteTaskId" type="hidden">
-          <label class="complete-check"><input id="supervisorScheduleCompleted" type="checkbox"> 已完成人力／排班安排</label>
-          <label class="complete-check"><input id="supervisorMutationIncluded" type="checkbox"> 已列入異動通報（代班／人力異動）</label>
-          <p id="supervisorVisitCompleteHint" class="small-note" hidden></p>
-          <p class="small-note">可依實際情況勾選；儲存後待辦會標記為已完成。</p>
-          <div class="button-row"><button id="supervisorConfirmComplete" class="primary-btn" type="button">確認完成</button><button id="supervisorCancelComplete" class="ghost-btn" type="button">取消</button></div>
-        </div>
-      </div>
+  <div class="cm-two-col">
+    <section id="cmTodos" class="panel cm-block">
+      <div class="cm-block-title"><div><h3>待辦事項</h3><p>可設定日期、優先度與備註，完成後直接勾選。</p></div></div>
+      <div class="cm-todo-form"><label>待辦事項<input id="cmTodoTitle" placeholder="例：完成王○○計畫異動"></label><label>日期<input id="cmTodoDate" type="date"></label><label>優先度<select id="cmTodoPriority"><option value="high">重要</option><option value="normal" selected>一般</option><option value="low">稍後</option></select></label><label>備註<input id="cmTodoNote" placeholder="可留空"></label><button id="cmAddTodo" class="primary" type="button">加入待辦</button></div>
+      <div id="cmTodoList" class="cm-todo-list"></div>
     </section>
 
-    <section id="quotaTool" class="tool-section active">
-      <div class="section-title">
-        <h2>額度計算器</h2>
-        <p>選擇 CMS 等級與身分別，自動計算給付額度、部分負擔與補助金額。</p>
-      </div>
-      <div class="card grid-2">
-        <label>CMS 等級<select id="cmsSelect"></select></label>
-        <label>身分別<select id="identitySelect"></select></label>
-      </div>
-      <div class="result-grid">
-        <div class="result-card"><span>給付額度</span><strong id="quotaAmount">0</strong></div>
-        <div class="result-card"><span>部分負擔</span><strong id="selfPayAmount">0</strong></div>
-        <div class="result-card"><span>補助金額</span><strong id="subsidyAmount">0</strong></div>
-      </div>
+    <section id="cmCalendarSection" class="panel cm-block">
+      <div class="cm-block-title"><div><h3>行事曆</h3><p>顯示待辦與已安排家訪；安排家訪不等於完成。</p></div><button id="cmScheduleHomeVisit" class="primary" type="button">＋ 安排家訪</button></div>
+      <div id="cmCalendar"></div>
     </section>
+  </div>
 
-    <section id="codeTool" class="tool-section">
-      <div class="section-title">
-        <h2>各碼別介紹</h2>
-        <p>可搜尋碼別、服務名稱或關鍵字，並直接顯示第一類、第二類、第三類自付金額。</p>
-      </div>
-      <div class="card"><input id="serviceSearch" class="search-input" placeholder="輸入 BA07、沐浴、備餐、SC09..." /></div>
-      <div id="serviceList" class="service-list"></div>
-    </section>
+  <section id="cmData" class="panel cm-block cm-data-block">
+    <div class="cm-block-title"><div><h3>資料管理</h3><p>資料只存在目前裝置與瀏覽器。換電腦、換瀏覽器或清除網站資料前，請先匯出備份。</p></div></div>
+    <div class="cm-data-actions"><button id="cmExport" class="primary" type="button">匯出完整備份</button><label class="secondary cm-file-label">匯入備份<input id="cmImport" type="file" accept="application/json"></label><button id="cmClear" class="secondary danger-outline" type="button">清除本機資料</button></div>
+    <div class="cm-local-note"><strong>這個工作台不使用 AI。</strong>新增個案、勾選家電訪、案量統計、待辦、行事曆與備份皆在瀏覽器本機處理，不會因使用這些功能而產生 AI 使用量。</div>
+  </section>
+</section>
 
-    <section id="feeTool" class="tool-section">
-      <div class="section-title">
-        <h2>服務規劃</h2>
-        <p>依實際需求分三個階段使用：先試算服務金額，需要時再安排服務型態，最後才產生服務確認單。</p>
-      </div>
+<div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
+  <div class="cm-modal-card cm-disclaimer-card">
+    <h2 id="cmDisclaimerTitle">使用前請先了解資料儲存方式</h2>
+    <div class="cm-disclaimer-points">
+      <div><b>資料存在本機</b><span>你輸入的個案名單、家電訪、待辦與行事曆資料，儲存在目前使用的裝置與瀏覽器中。</span></div>
+      <div><b>長照研究室不保存個案資料</b><span>工作台不會主動把你輸入的個案資料傳送給長照研究室、AI 或雲端資料庫。</span></div>
+      <div><b>不消耗 AI 使用量</b><span>工作台的案量統計、勾選、提醒、匯入與匯出皆為本機功能。</span></div>
+      <div><b>請記得備份</b><span>更換裝置、瀏覽器，或清除網站資料時，本機資料可能消失，請定期使用「匯出完整備份」。</span></div>
+    </div>
+    <p class="cm-legal-note">本工具為個人工作輔助工具。使用者仍應依所屬機構之個人資料保護與資訊安全規範使用；建議避免於共用或不受信任的裝置輸入可直接識別個案身分的資料。裝置本身、瀏覽器外掛或其他第三方環境所造成的資訊安全風險，不在本工具可控制範圍內。</p>
+    <div class="cm-modal-actions"><button id="cmDisclaimerClose" class="secondary" type="button">稍後再看</button><button id="cmDisclaimerAccept" class="primary" type="button">我已了解並開始使用</button></div>
+  </div>
+</div>
 
-      <div class="service-wizard">
-        <div class="wizard-progress" aria-label="服務規劃流程">
-          <button class="wizard-step active" type="button" data-wizard-step="1">
-            <span>1</span><strong>服務試算</strong>
-          </button>
-          <div class="wizard-line"></div>
-          <button class="wizard-step" type="button" data-wizard-step="2">
-            <span>2</span><strong>安排服務</strong>
-          </button>
-          <div class="wizard-line"></div>
-          <button class="wizard-step" type="button" data-wizard-step="3">
-            <span>3</span><strong>服務確認單</strong>
-          </button>
-        </div>
+<div id="cmExcelModal" class="cm-modal" role="dialog" aria-modal="true"><div class="cm-modal-card"><h3>Excel 匯入預覽</h3><p class="cm-legal-note">Excel 僅在目前瀏覽器本機讀取，不會上傳至伺服器。</p><div id="cmExcelPreview"></div></div></div>
+<div id="cmHomeVisitModal" class="cm-modal" role="dialog" aria-modal="true"><div class="cm-modal-card"><h3>安排家訪</h3><input id="cmHomeVisitId" type="hidden"><div class="cm-form-grid"><label>個案<select id="cmHomeVisitCase"></select></label><label>家訪日期<input id="cmHomeVisitDate" type="date"></label><label>時間（選填）<input id="cmHomeVisitTime" type="time"></label><label>備註（選填）<input id="cmHomeVisitNote" placeholder="例：與案女共同家訪"></label></div><p class="cm-legal-note">本月應家訪個案會優先排列；已安排不會自動視為完成。</p><div class="cm-modal-actions"><button id="cmHomeVisitDelete" class="secondary danger-outline" type="button">取消此安排</button><button id="cmHomeVisitCancel" class="secondary" type="button">關閉</button><button id="cmHomeVisitSave" class="primary" type="button">儲存家訪</button></div></div></div>
+<div id="cmCloseModal" class="cm-modal" role="dialog" aria-modal="true">
+  <div class="cm-modal-card">
+    <h3>個案結案</h3><p>個案：<strong id="cmCloseCaseName"></strong></p>
+    <label>結案日期<input id="cmCloseDate" type="date"></label>
+    <label>結案原因<select id="cmCloseReason"><option value="">不填寫</option><option>死亡</option><option>入住住宿機構</option><option>遷出服務區</option><option>資格不符</option><option>三個月未使用且無意願</option><option>其他</option></select></label>
+    <p class="cm-legal-note">結案不會刪除過去的家電訪紀錄；結案後的月份不再列入應訪名單。</p>
+    <div class="cm-modal-actions"><button id="cmCloseCancel" class="secondary" type="button">取消</button><button id="cmCloseConfirm" class="primary" type="button">確認結案</button></div>
+  </div>
+</div>
 
-        <section class="wizard-panel active" data-wizard-panel="1">
-          <div class="wizard-panel-heading">
-            <div>
-              <h3>第一階段｜服務金額試算</h3>
-              <p>輸入已核定的服務碼別及每月次數，先確認使用額度與預估費用。</p>
-            </div>
-          </div>
-
-          <div class="card grid-3">
-            <label>CMS 等級<select id="feeCms"></select></label>
-            <label>身分別<select id="feeIdentity"></select></label>
-            <div class="align-end"><button id="addFeeRow" class="primary-btn" type="button">＋新增核定碼別</button></div>
-          </div>
-
-          <div id="feeRows" class="fee-rows"></div>
-
-          <div class="result-grid fee-result-grid">
-            <div class="result-card"><span>預估使用額度</span><strong id="feeTotal">0</strong></div>
-            <div class="result-card"><span>CMS可用額度</span><strong id="feeQuota">0</strong></div>
-            <div class="result-card"><span>部分負擔</span><strong id="feeSelfPay">0</strong></div>
-            <div class="result-card"><span>超額自費</span><strong id="feeOverage">0</strong></div>
-            <div class="result-card highlight-card"><span>預估自付總額</span><strong id="feeClientTotal">0</strong></div>
-            <div class="result-card"><span>剩餘額度</span><strong id="feeRemain">0</strong></div>
-          </div>
-          <div id="feeNotice" class="notice-card success">尚未超出 CMS 額度。</div>
-
-          <div class="wizard-actions">
-            <span class="wizard-action-note">只需要試算時，可停在這一步。</span>
-            <button class="primary-btn" type="button" data-go-step="2">下一步：安排服務 →</button>
-          </div>
-        </section>
-
-        <section class="wizard-panel" data-wizard-panel="2">
-          <div class="wizard-panel-heading">
-            <div>
-              <h3>第二階段｜安排服務型態</h3>
-              <p>依第一階段已輸入的核定碼別，設定每週服務日、時間與服務項目。</p>
-            </div>
-          </div>
-
-          <div class="card approved-service-summary">
-            <h3 class="card-title">已核定服務</h3>
-            <div id="approvedServiceSummary" class="approved-service-chips"></div>
-          </div>
-
-          <div class="card service-schedule-card">
-            <div class="schedule-heading">
-              <div>
-                <h3 class="card-title">每週預計服務安排</h3>
-                <p class="hint-text">可建立多個時段；服務項目只會顯示第一階段已加入的碼別。</p>
-              </div>
-              <button id="addScheduleRow" class="secondary-btn" type="button">＋新增服務時段</button>
-            </div>
-            <div id="scheduleRows" class="schedule-rows"></div>
-          </div>
-
-          <div class="wizard-actions wizard-actions-between">
-            <button class="ghost-btn" type="button" data-go-step="1">← 回到服務試算</button>
-            <div>
-              <span class="wizard-action-note">只需要排班時，可停在這一步。</span>
-              <button class="primary-btn" type="button" data-go-step="3">下一步：服務確認單 →</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="wizard-panel" data-wizard-panel="3">
-          <div class="wizard-panel-heading">
-            <div>
-              <h3>第三階段｜產生服務確認單</h3>
-              <p>只有需要列印或另存 PDF 時，才填寫以下基本資料。</p>
-            </div>
-          </div>
-
-          <div class="card confirmation-settings-card">
-            <div class="grid-2">
-              <label>個案姓名／代號<input id="confirmClientName" placeholder="例如：王○○"></label>
-              <label>確認單類型
-                <select id="confirmVersionType">
-                  <option>初次服務確認</option>
-                  <option>服務調整確認</option>
-                  <option>複評後確認</option>
-                  <option>其他</option>
-                </select>
-              </label>
-              <label>服務起始日<input id="confirmStartDate" type="date"></label>
-              <label>服務結束日<input id="confirmEndDate" type="date"></label>
-              <label>居家服務單位<input id="confirmUnitName" placeholder="請輸入單位全名"></label>
-              <label>居家督導員<input id="confirmSupervisorName" placeholder="請輸入姓名"></label>
-              <label>聯絡電話<input id="confirmPhone" placeholder="例如：02-XXXXXXX"></label>
-              <label>電子郵件（選填）<input id="confirmEmail" type="email" placeholder="例如：service@example.com"></label>
-            </div>
-            <p class="hint-text">居家服務單位、居家督導員、聯絡電話及 Email 可儲存在目前瀏覽器；個案姓名不會自動保存。</p>
-            <div class="button-row">
-              <button id="saveConfirmSettings" class="secondary-btn" type="button">儲存居家單位資訊</button>
-            </div>
-          </div>
-
-          <div class="wizard-actions wizard-actions-between">
-            <button class="ghost-btn" type="button" data-go-step="2">← 回到安排服務</button>
-            <div class="button-row compact-button-row">
-              <button id="previewConfirmation" class="primary-btn" type="button">預覽服務確認單</button>
-              <button id="printConfirmation" class="secondary-btn" type="button">列印／另存 PDF</button>
-            </div>
-          </div>
-        </section>
-      </div>
-    </section>
-
-    <section id="visitTool" class="tool-section">
-      <div class="section-title">
-        <h2>家訪紀錄生成器</h2>
-        <p>用精簡選單完成個案狀況、居住環境、照顧者與服務使用追蹤，並依開立碼別自動帶入服務目標與服務計畫。</p>
-      </div>
-      <div class="visit-layout">
-        <div class="visit-form">
-          <details open class="visit-block">
-            <summary>一、家訪基本資料</summary>
-            <div class="grid-2">
-              <label>本次家訪重點
-                <select id="visitPurpose">
-                  <option>例行追蹤</option><option>新開案追蹤</option><option>異常事件追蹤</option><option>滿意度調查</option><option>服務調整評估</option><option>申訴案件追蹤</option>
-                </select>
-              </label>
-              <label>服務是否需調整
-                <select id="needAdjust"><option>暫無調整需求</option><option>建議增加服務</option><option>建議減少服務</option><option>需再與個管討論</option></select>
-              </label>
-            </div>
-          </details>
-
-          <details class="visit-block">
-            <summary>二、個案狀況評估</summary>
-            <div class="grid-3" id="physicalFields"></div>
-            <label>個案狀況補充
-              <textarea id="healthNote" placeholder="例如：近期體況穩定、睡眠品質較差、用藥由家屬協助管理、回診狀況穩定..."></textarea>
-            </label>
-          </details>
-
-          <details class="visit-block">
-            <summary>三、居住環境與主要照顧者</summary>
-            <h4>居住環境</h4>
-            <div class="checkbox-grid" id="environmentChecks"></div>
-            <label>環境補充
-              <textarea id="environmentNote" placeholder="例如：浴室地面濕滑，已提醒家屬加強防滑措施..."></textarea>
-            </label>
-            <h4>主要照顧者</h4>
-            <div class="grid-3" id="caregiverFields"></div>
-          </details>
-
-          <details class="visit-block"><summary>四、服務使用與滿意度</summary><div class="grid-3" id="serviceUseFields"></div></details>
-
-          <details class="visit-block">
-            <summary>五、異常事件與需求變化</summary>
-            <h4>近期異常事件</h4><div class="checkbox-grid" id="incidentChecks"></div>
-            <h4>需求變化</h4><div class="checkbox-grid" id="needChecks"></div>
-          </details>
-
-          <details class="visit-block"><summary>六、開立碼別</summary><div id="visitServiceChecks" class="checkbox-grid code-checks"></div></details>
-
-          <details class="visit-block">
-            <summary>七、補充紀錄</summary>
-            <label>其他補充<textarea id="extraNote" placeholder="特殊家屬反映、居服員回饋、後續需追蹤事項..."></textarea></label>
-          </details>
-
-          <div class="button-row">
-            <button id="generateVisit" class="primary-btn" type="button">生成家訪紀錄</button>
-            <button id="copyVisit" class="secondary-btn" type="button">複製完整紀錄</button>
-            <button id="copyPlan" class="secondary-btn" type="button">複製服務計畫</button>
-            <button id="copyConclusion" class="secondary-btn" type="button">複製家訪結論</button>
-            <button id="clearVisit" class="ghost-btn" type="button">清空</button>
-          </div>
-        </div>
-
-        <div class="visit-output-wrap">
-          <h3>生成結果</h3>
-          <textarea id="visitOutput" class="visit-output" placeholder="按下「生成家訪紀錄」後，這裡會產生可複製的紀錄。"></textarea>
-        </div>
-      </div>
-    </section>
-
-    <section id="mutationTool" class="tool-section">
-      <div class="section-title">
-        <h2>異動通報產生器</h2>
-        <p>選擇通報類型並填入重點資料，自動產生可貼到照管平台或 LINE 群組的文字。</p>
-      </div>
-      <div class="mutation-layout">
-        <div class="mutation-form">
-          <details open class="visit-block mutation-settings">
-            <summary>一、單位資訊設定</summary>
-            <p class="hint-text">儲存後會自動帶入每一則通報，資料只會存在目前這台裝置的瀏覽器。</p>
-            <div class="grid-2">
-              <label>單位名稱<input id="mutUnitName" placeholder="例如：新北市私立○○居家長照機構"></label>
-              <label>聯繫人<input id="mutContactName" placeholder="例如：王小明"></label>
-              <label>職稱<input id="mutContactTitle" placeholder="例如：居家服務督導員"></label>
-              <label>聯絡電話<input id="mutContactPhone" placeholder="例如：02-XXXXXXX"></label>
-            </div>
-            <div class="button-row"><button id="saveMutSettings" class="primary-btn" type="button">儲存單位資訊</button></div>
-          </details>
-
-          <div class="card">
-            <div class="grid-2">
-              <label>通報類型
-                <select id="mutType">
-                  <option value="pause">暫停服務</option>
-                  <option value="end">結束服務</option>
-                  <option value="first">第一次服務進場</option>
-                  <option value="delay">未能於時效內進場服務</option>
-                  <option value="adjust">服務型態調整</option>
-                  <option value="quota">額度開立回報</option>
-                  <option value="incident">異常事件通報</option>
-                  <option value="missed">服務未遇</option>
-                </select>
-              </label>
-              <label>通知方式
-                <select id="mutMethod">
-                  <option value="來電">電話</option><option value="LINE">LINE</option><option value="面訪">面訪</option><option value="簡訊">簡訊</option><option value="其他">其他</option>
-                </select>
-              </label>
-              <label>通報日期<input id="mutDate" type="date"></label>
-              <label>通報時間<input id="mutTime" type="time"></label>
-            </div>
-          </div>
-
-          <div class="card" id="mutPersonCard">
-            <h3 class="card-title">通知／提出人</h3>
-            <div class="grid-3">
-              <label>通知人類別
-                <select id="mutPersonType">
-                  <option value="個案本人">個案本人</option><option value="家屬">家屬</option><option value="專業人員">專業人員</option><option value="機構／單位">機構／單位</option><option value="其他">其他</option>
-                </select>
-              </label>
-              <label id="mutPersonDetailWrap">細項<select id="mutPersonDetail"></select></label>
-              <label>其他說明<input id="mutPersonOther" placeholder="選其他時填寫，例如：鄰居、里長、醫院出準"></label>
-            </div>
-          </div>
-
-          <div id="mutationSpecificForm" class="mutation-specific"></div>
-
-          <div class="button-row">
-            <button id="generateMutation" class="primary-btn" type="button">生成異動通報</button>
-            <button id="copyMutation" class="secondary-btn" type="button">複製通報內容</button>
-            <button id="clearMutation" class="ghost-btn" type="button">清空本次資料</button>
-          </div>
-        </div>
-
-        <div class="visit-output-wrap">
-          <h3>生成結果</h3>
-          <textarea id="mutationOutput" class="visit-output" placeholder="按下「生成異動通報」後，這裡會產生可複製的通報文字。"></textarea>
-        </div>
-      </div>
-    </section>
-
-
-    <section id="renewalTool" class="tool-section">
-      <div class="section-title">
-        <h2>長照小卡換證檢核器</h2>
-        <p>輸入小卡效期與重點積分，初步檢核是否符合換證條件，並自動判斷原民／多元課程年度是否達標。</p>
-      </div>
-
-      <div class="renewal-layout">
-        <div class="renewal-form">
-          <details open class="visit-block">
-            <summary>一、小卡資料與總積分</summary>
-            <div class="grid-2">
-              <label>小卡生效日<input id="renewStart" type="date"></label>
-              <label>小卡到期日<input id="renewEnd" type="date"></label>
-              <label>六年總積分<input id="renewTotalPoints" type="number" min="0" step="0.5" placeholder="例如：120"></label>
-              <label>網路課程積分<input id="renewOnlinePoints" type="number" min="0" step="0.5" placeholder="115/07/01起最高採認80點"></label>
-            </div>
-            <p class="hint-text">小提醒：長照小卡可於到期日前 6 個月內申請更新；若原民／多元年度課程未完成，最快為到期後隔天且補足積分後辦理。日期欄位請以西元日期輸入，例如 2024/07/01。</p>
-          </details>
-
-          <details class="visit-block">
-            <summary>二、專業品質／倫理／法規</summary>
-            <div class="grid-3">
-              <label>專業品質<input id="renewQuality" type="number" min="0" step="0.5" placeholder="點數"></label>
-              <label>專業倫理<input id="renewEthics" type="number" min="0" step="0.5" placeholder="點數"></label>
-              <label>專業法規<input id="renewLaw" type="number" min="0" step="0.5" placeholder="點數"></label>
-            </div>
-            <p class="hint-text">三類合計至少 24 點，且各項不得為 0；最多採計 36 點，超過部分不再累計。</p>
-          </details>
-
-          <details class="visit-block">
-            <summary>三、消防／緊急／感染／性別</summary>
-            <div class="grid-2">
-              <label>消防安全<input id="renewFire" type="number" min="0" step="0.5" placeholder="點數"></label>
-              <label>緊急應變<input id="renewEmergency" type="number" min="0" step="0.5" placeholder="點數"></label>
-              <label>感染管制<input id="renewInfection" type="number" min="0" step="0.5" placeholder="點數"></label>
-              <label>性別敏感度<input id="renewGender" type="number" min="0" step="0.5" placeholder="點數"></label>
-            </div>
-            <p class="hint-text">四項主題皆需有積分，且合計至少 10 點。</p>
-          </details>
-
-          <details open class="visit-block">
-            <summary>四、原民／多元課程</summary>
-            <p class="hint-text">113/06/02 以前：僅採計「舊制／多元文化族群」課程合計 2 點。113/06/03 以後：依小卡年度切點，每年原民至少 1 點、多元至少 1 點。</p>
-            <div class="button-row"><button id="addCultureCourse" class="secondary-btn" type="button">＋新增課程</button></div>
-            <div id="cultureCourseRows" class="renew-course-rows"></div>
-          </details>
-
-          <div class="button-row">
-            <button id="checkRenewal" class="primary-btn" type="button">檢核換證資格</button>
-            <button id="copyRenewal" class="secondary-btn" type="button">複製檢核結果</button>
-            <button id="clearRenewal" class="ghost-btn" type="button">清空</button>
-          </div>
-        </div>
-
-        <div class="visit-output-wrap renewal-output-wrap">
-          <h3>檢核結果</h3>
-          <div id="renewalSummary" class="renewal-summary">請輸入資料後按下「檢核換證資格」。</div>
-          <textarea id="renewalOutput" class="visit-output renewal-output" placeholder="這裡會產生可複製的檢核結果。"></textarea>
-        </div>
-      </div>
-    </section>
-
-    <section id="confirmationPreviewSection" class="confirmation-preview-section" aria-hidden="true">
-      <div class="confirmation-preview-toolbar no-print">
-        <button id="closeConfirmationPreview" class="ghost-btn" type="button">關閉預覽</button>
-        <button id="printConfirmationFromPreview" class="primary-btn" type="button">列印／另存 PDF</button>
-      </div>
-      <article id="confirmationDocument" class="confirmation-document"></article>
-    </section>
-
-  </main>
-
-  <footer class="site-footer">
-    <div>© Longcare.Notes｜長照研究室</div>
-    <small>※ 本工具部分內容由 AI 協助生成，請依實際個案狀況、相關法規及專業判斷審慎使用。</small>
-    <small>※「居督碎碎唸」為本人實務工作經驗分享，內容可能因各縣市執行方式、主管機關解釋或服務單位規範而有所差異。如有疑義，請以中央及各地方政府最新規定為準。</small>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="serviceData.js"></script>
-  <script src="js/core.js"></script>
-  <script src="js/tabs.js"></script>
-  <script src="js/quota.js"></script>
-  <script src="js/services.js"></script>
-  <script src="js/fee.js"></script>
-  <script src="js/visit.js"></script>
-  <script src="js/mutation.js"></script>
-  <script src="js/renewal.js"></script>
-  <script src="js/supervisor.js"></script>
-  <script src="js/confirmation.js"></script>
-  <script src="js/app.js"></script>
-
-  <script>
-    // GA4 功能使用追蹤：只記錄功能操作，不記錄個資或表單內容
-    (function () {
-      function sendToolEvent(eventName, params) {
-        if (typeof gtag !== 'function') return;
-        gtag('event', eventName, Object.assign({
-          tool_site: 'homecare_supervisor_tool'
-        }, params || {}));
-      }
-
-      document.querySelectorAll('.tab-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          sendToolEvent('tool_tab_click', {
-            tool_name: btn.dataset.target || '',
-            tab_text: (btn.textContent || '').trim()
-          });
-        });
-      });
-
-      var buttonEvents = {
-        addFeeRow: 'fee_add_row',
-        generateVisit: 'visit_record_generate',
-        copyVisit: 'visit_record_copy_full',
-        copyPlan: 'visit_plan_copy',
-        copyConclusion: 'visit_conclusion_copy',
-        clearVisit: 'visit_form_clear',
-        saveMutSettings: 'mutation_settings_save',
-        generateMutation: 'mutation_report_generate',
-        copyMutation: 'mutation_report_copy',
-        clearMutation: 'mutation_form_clear',
-        addCultureCourse: 'renewal_culture_course_add',
-        checkRenewal: 'renewal_check',
-        copyRenewal: 'renewal_result_copy',
-        clearRenewal: 'renewal_form_clear',
-        addScheduleRow: 'confirmation_schedule_add',
-        saveConfirmSettings: 'confirmation_settings_save',
-        previewConfirmation: 'confirmation_preview',
-        printConfirmation: 'confirmation_print'
-      };
-
-      Object.keys(buttonEvents).forEach(function (id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('click', function () {
-          sendToolEvent(buttonEvents[id], { button_id: id });
-        });
-      });
-
-      ['cmsSelect', 'identitySelect'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('change', function () {
-          sendToolEvent('quota_input_change', { field_id: id });
-        });
-      });
-
-      ['feeCms', 'feeIdentity'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('change', function () {
-          sendToolEvent('fee_input_change', { field_id: id });
-        });
-      });
-
-      var searchInput = document.getElementById('serviceSearch');
-      if (searchInput) {
-        searchInput.addEventListener('change', function () {
-          sendToolEvent('service_code_search', {
-            has_keyword: searchInput.value.trim().length > 0
-          });
-        });
-      }
-    })();
-  </script>
-
+</main>
+<footer>© Longcare.Notes｜長照研究室｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=18.2"></script>
 </body>
 </html>
