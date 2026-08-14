@@ -166,7 +166,13 @@
   </div>
 
   <section id="cmCases" class="panel cm-block">
-    <div class="cm-block-title"><div><h3>個案名單</h3><p>建立個案後，系統會依前次家訪月份推算下一次應家訪月份。</p></div></div>
+    <div class="cm-block-title">
+      <div><h3>個案名單</h3><p>建立個案後，系統會依前次家訪月份推算下一次應家訪月份。</p></div>
+      <div class="cm-title-actions">
+        <button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button>
+        <label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+      </div>
+    </div>
     <div class="cm-form-grid cm-case-form">
       <label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label>
       <label>開案日期<input id="cmOpenDate" type="date"></label>
@@ -192,7 +198,10 @@
     </section>
 
     <section id="cmCalendarSection" class="panel cm-block">
-      <div class="cm-block-title"><div><h3>行事曆</h3><p>目前先顯示待辦事項；切換上方月份即可查看其他月份。</p></div></div>
+      <div class="cm-block-title">
+        <div><h3>行事曆</h3><p>顯示待辦與已安排家訪；安排家訪不等於完成，完成後仍需至家／電訪進度勾選。</p></div>
+        <button id="cmScheduleHomeVisit" class="primary" type="button">＋ 安排家訪</button>
+      </div>
       <div id="cmCalendar"></div>
     </section>
   </div>
@@ -218,6 +227,34 @@
   </div>
 </div>
 
+
+<div id="cmExcelModal" class="cm-modal" role="dialog" aria-modal="true">
+  <div class="cm-modal-card">
+    <h3>Excel 匯入預覽</h3>
+    <p class="cm-legal-note">Excel 僅在目前瀏覽器本機讀取，不會上傳至長照研究室、AI 或雲端資料庫。</p>
+    <div id="cmExcelPreview"></div>
+  </div>
+</div>
+
+<div id="cmHomeVisitModal" class="cm-modal" role="dialog" aria-modal="true">
+  <div class="cm-modal-card">
+    <h3>安排家訪</h3>
+    <input id="cmHomeVisitId" type="hidden">
+    <div class="cm-form-grid">
+      <label>個案<select id="cmHomeVisitCase"></select></label>
+      <label>家訪日期<input id="cmHomeVisitDate" type="date"></label>
+      <label>時間（選填）<input id="cmHomeVisitTime" type="time"></label>
+      <label>備註（選填）<input id="cmHomeVisitNote" placeholder="例：與案女共同家訪"></label>
+    </div>
+    <p class="cm-legal-note">本月應家訪個案會優先排列；「已安排」不會自動視為完成。</p>
+    <div class="cm-modal-actions">
+      <button id="cmHomeVisitDelete" class="secondary danger-outline" type="button">取消此安排</button>
+      <button id="cmHomeVisitCancel" class="secondary" type="button">關閉</button>
+      <button id="cmHomeVisitSave" class="primary" type="button">儲存家訪</button>
+    </div>
+  </div>
+</div>
+
 <div id="cmCloseModal" class="cm-modal" role="dialog" aria-modal="true">
   <div class="cm-modal-card">
     <h3>個案結案</h3><p>個案：<strong id="cmCloseCaseName"></strong></p>
@@ -230,6 +267,6 @@
 
 </main>
 <footer>© Longcare.Notes｜長照研究室｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
-<script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=18.0"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=18.3"></script>
 </body>
 </html>
