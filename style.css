@@ -24,3 +24,50 @@
   .cm-import-summary{grid-template-columns:1fr 1fr}
   .cm-title-actions{width:100%;margin-top:8px}
 }
+
+
+/* ===== v19 兩層式工具首頁 ===== */
+.tool-legacy-tabs{display:none!important}
+.tool-home{padding:24px 16px 54px}
+.tool-home[hidden]{display:none!important}
+.tool-home-inner{max-width:1100px;margin:0 auto}
+.tool-home-heading{text-align:center;margin:4px auto 28px;max-width:720px}
+.tool-home-heading h2{font-size:clamp(1.65rem,4vw,2.25rem);margin:5px 0 7px}
+.tool-home-heading p{margin:0;color:var(--muted)}
+.tool-home-kicker{display:inline-block;font-size:.76rem;font-weight:900;letter-spacing:.14em;color:var(--accent2);background:#efe1d1;border-radius:999px;padding:5px 10px}
+.tool-group{margin:26px 0 32px}
+.tool-group-title{display:flex;align-items:baseline;gap:10px;margin:0 4px 10px}
+.tool-group-title span{font-size:1.08rem;font-weight:900}
+.tool-group-title small{color:var(--muted)}
+.tool-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tool-card{appearance:none;width:100%;min-height:128px;display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;text-align:left;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 7px 20px rgba(96,70,45,.07);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.tool-card:hover,.tool-card:focus-visible{transform:translateY(-2px);box-shadow:0 12px 28px rgba(96,70,45,.12);border-color:#d8b897;outline:none}
+.tool-card-featured{background:linear-gradient(135deg,#fff9ef,#f5e4d1);border-color:#ddbea0}
+.tool-card-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:#f1e3d4;font-size:1.65rem}
+.tool-card-featured .tool-card-icon{background:#ead2bb}
+.tool-card-copy{min-width:0}
+.tool-card-copy strong{display:block;font-size:1.05rem;margin-bottom:4px}
+.tool-card-copy small{display:block;color:var(--muted);line-height:1.5;font-weight:500}
+.tool-card-arrow{font-size:1.25rem;color:var(--accent2);font-weight:900}
+.tool-page-bar{position:sticky;top:0;z-index:80;background:rgba(255,248,239,.94);backdrop-filter:blur(9px);border-bottom:1px solid var(--line)}
+.tool-page-bar[hidden]{display:none!important}
+.tool-page-bar-inner{max-width:1180px;margin:0 auto;padding:9px 14px;display:flex;align-items:center;gap:13px}
+.tool-page-bar-inner strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool-back-home{border:1px solid var(--line);background:#efe2d3;color:var(--ink);border-radius:999px;padding:8px 13px;cursor:pointer;font-weight:800;white-space:nowrap}
+.tool-page-bar+main.container{padding-top:18px}
+
+@media(max-width:860px){
+  .tool-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .hero{padding:22px 14px 17px}
+  .hero small{font-size:.78rem;line-height:1.55}
+  .tool-home{padding:18px 12px 42px}
+  .tool-home-heading{margin-bottom:20px}
+  .tool-group{margin:22px 0 27px}
+  .tool-group-title{display:block}
+  .tool-group-title small{display:block;margin-top:1px}
+  .tool-card-grid{grid-template-columns:1fr;gap:10px}
+  .tool-card{min-height:104px;padding:15px;border-radius:18px}
+  .tool-card-icon{width:44px;height:44px;border-radius:13px;font-size:1.45rem}
+}

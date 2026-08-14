@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Longcare.Notes｜長照研究室</title>
-  <link rel="stylesheet" href="style.css?v=17.7" />
+  <link rel="stylesheet" href="style.css?v=19.0" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
@@ -22,16 +22,63 @@
   <small>額度計算｜全碼別手冊｜輔具圖鑑｜民眾自付試算｜照顧計畫｜換證檢核｜電訪輔助<br>資料基礎：115年度長期照顧服務申請及給付辦法附表；金額以小數點後無條件捨去初步估算。</small>
 </header>
 
-<section aria-label="長照法規速查入口" style="max-width:1100px;margin:16px auto 8px;padding:0 16px;">
-  <a href="./law/" style="display:block;text-decoration:none;color:inherit;background:#fff8ec;border:1px solid #e8d8bd;border-radius:18px;padding:18px 20px;box-shadow:0 4px 14px rgba(75,60,35,.08);">
-    <div style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">📚 長照法規速查</div>
-    <div style="line-height:1.6;">輸入 BA13、AA01 或服務關鍵字，快速查看現行規定、相關函示與官方來源。</div>
-    <div style="margin-top:10px;font-weight:700;">立即查詢 →</div>
-  </a>
+<section id="toolHome" class="tool-home" aria-label="Longcare.Notes 功能首頁">
+  <div class="tool-home-inner">
+    <div class="tool-home-heading">
+      <span class="tool-home-kicker">LONGCARE.NOTES</span>
+      <h2>今天要用哪個工具？</h2>
+      <p>選一張卡片開始。各工具維持獨立操作，個管工作台資料仍只存在你的瀏覽器本機。</p>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-group-title"><span>工作管理</span><small>紀錄、追蹤與日常工作</small></div>
+      <div class="tool-card-grid">
+        <button class="tool-card tool-card-featured" type="button" data-home-target="casework">
+          <span class="tool-card-icon">🗂️</span><span class="tool-card-copy"><strong>個管工作台</strong><small>案量、家電訪、待辦與行事曆</small></span><span class="tool-card-arrow">→</span>
+        </button>
+        <button class="tool-card" type="button" data-home-target="phone">
+          <span class="tool-card-icon">☎️</span><span class="tool-card-copy"><strong>電訪輔助生成器</strong><small>整理電訪內容，快速生成紀錄</small></span><span class="tool-card-arrow">→</span>
+        </button>
+        <button class="tool-card" type="button" data-home-target="careplan">
+          <span class="tool-card-icon">📝</span><span class="tool-card-copy"><strong>照顧計畫生成器</strong><small>把評估資訊整理成照顧計畫</small></span><span class="tool-card-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-group-title"><span>查詢工具</span><small>需要查資料時，從這裡開始</small></div>
+      <div class="tool-card-grid">
+        <button class="tool-card" type="button" data-home-target="codes">
+          <span class="tool-card-icon">📖</span><span class="tool-card-copy"><strong>碼別介紹</strong><small>查服務碼別、金額與注意事項</small></span><span class="tool-card-arrow">→</span>
+        </button>
+        <button class="tool-card" type="button" data-home-target="atlas">
+          <span class="tool-card-icon">♿</span><span class="tool-card-copy"><strong>輔具及無障礙圖鑑</strong><small>用圖片快速找輔具與補助品項</small></span><span class="tool-card-arrow">→</span>
+        </button>
+        <a class="tool-card" href="./law/" data-law-card>
+          <span class="tool-card-icon">⚖️</span><span class="tool-card-copy"><strong>長照法規速查</strong><small>搜尋規定、函示與官方來源</small></span><span class="tool-card-arrow">→</span>
+        </a>
+        <button class="tool-card" type="button" data-home-target="renewal">
+          <span class="tool-card-icon">🎫</span><span class="tool-card-copy"><strong>換證檢核器</strong><small>快速檢查長照小卡換證積分</small></span><span class="tool-card-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-group-title"><span>計算工具</span><small>額度與費用快速試算</small></div>
+      <div class="tool-card-grid">
+        <button class="tool-card" type="button" data-home-target="quota">
+          <span class="tool-card-icon">🧮</span><span class="tool-card-copy"><strong>額度計算器</strong><small>快速查看 CMS 各項可用額度</small></span><span class="tool-card-arrow">→</span>
+        </button>
+        <button class="tool-card" type="button" data-home-target="fee">
+          <span class="tool-card-icon">💰</span><span class="tool-card-copy"><strong>民眾自付試算</strong><small>估算部分負擔、超額與剩餘額度</small></span><span class="tool-card-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </section>
 
-<nav class="tabs">
-  <button class="tab active" data-target="quota">額度計算器</button>
+<nav class="tabs tool-legacy-tabs" aria-hidden="true">
+  <button class="tab" data-target="quota">額度計算器</button>
   <button class="tab" data-target="codes">碼別介紹</button>
   <button class="tab" data-target="atlas">輔具及無障礙圖鑑</button>
   <button class="tab" data-target="fee">民眾自付試算</button>
@@ -40,8 +87,15 @@
   <button class="tab" data-target="phone">電訪輔助生成器</button>
   <button class="tab" data-target="casework">個管工作台</button>
 </nav>
+
+<div id="toolPageBar" class="tool-page-bar" hidden>
+  <div class="tool-page-bar-inner">
+    <button id="toolBackHome" class="tool-back-home" type="button">← 回工具首頁</button>
+    <strong id="toolPageName"></strong>
+  </div>
+</div>
 <main class="container">
-<section id="quota" class="section active">
+<section id="quota" class="section">
   <h2>額度計算器</h2>
   <div class="panel grid4">
     <label>CMS等級<select id="qLevel"></select></label>
@@ -268,5 +322,54 @@
 </main>
 <footer>© Longcare.Notes｜長照研究室｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=18.3"></script>
+
+<script>
+(function(){
+  const home=document.getElementById('toolHome');
+  const pageBar=document.getElementById('toolPageBar');
+  const pageName=document.getElementById('toolPageName');
+  const back=document.getElementById('toolBackHome');
+
+  function openTool(target,label){
+    const tab=document.querySelector('.tab[data-target="'+target+'"]');
+    if(!tab)return;
+    home.hidden=true;
+    pageBar.hidden=false;
+    pageName.textContent=label||tab.textContent.trim();
+    tab.click();
+    if(typeof gtag==='function'){
+      gtag('event','home_card_click',{tool_name:target,tool_label:label||tab.textContent.trim()});
+    }
+    window.scrollTo({top:0,behavior:'smooth'});
+    history.replaceState(null,'','#'+target);
+  }
+
+  function showHome(){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    pageBar.hidden=true;
+    home.hidden=false;
+    history.replaceState(null,'',location.pathname+location.search);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  document.querySelectorAll('[data-home-target]').forEach(card=>{
+    card.addEventListener('click',()=>openTool(card.dataset.homeTarget,card.querySelector('strong')?.textContent.trim()));
+  });
+  document.querySelector('[data-law-card]')?.addEventListener('click',()=>{
+    if(typeof gtag==='function')gtag('event','home_card_click',{tool_name:'law',tool_label:'長照法規速查'});
+  });
+  back.addEventListener('click',showHome);
+
+  const hash=location.hash.replace('#','');
+  if(hash && document.querySelector('.tab[data-target="'+hash+'"]')){
+    const tab=document.querySelector('.tab[data-target="'+hash+'"]');
+    openTool(hash,tab.textContent.trim());
+  }else{
+    showHome();
+  }
+})();
+</script>
+
 </body>
 </html>
