@@ -24,7 +24,7 @@
   }
 
   function defaultState(){
-    return {version:1,cases:[],visits:[],todos:[],settings:{notificationEnabled:false}};
+    return {version:2,cases:[],visits:[],todos:[],homeVisits:[],settings:{notificationEnabled:false}};
   }
   function uid(prefix){return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;}
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
@@ -38,6 +38,14 @@
   function activeNow(c){return c.status!=='closed';}
   function getVisit(caseId,m){return state.visits.find(v=>v.caseId===caseId&&v.month===m)||null;}
   function visitsForCase(caseId){return state.visits.filter(v=>v.caseId===caseId);}
+  function homeVisitsForDate(date){return (state.homeVisits||[]).filter(v=>v.date===date);}
+  function isHomeDue(c,m){return caseActiveDuringMonth(c,m)&&expectedVisitType(c,m)==='home';}
+  function activeCasesSortedForVisit(){
+    return state.cases.filter(activeNow).sort((a,b)=>{
+      const ar=isHomeDue(a,selectedMonth)?0:1,br=isHomeDue(b,selectedMonth)?0:1;
+      return ar-br||a.name.localeCompare(b.name,'zh-Hant');
+    });
+  }
   function latestHomeMonth(c, throughMonth='9999-12'){
     const months=[];
     if(c.prevHomeMonth && c.prevHomeMonth<=throughMonth) months.push(c.prevHomeMonth);
@@ -158,8 +166,13 @@
     const cells=calendarCells(selectedMonth).map(d=>{
       const iso=dateISO(d),same=iso.slice(0,7)===selectedMonth;
       const todos=state.todos.filter(t=>t.date===iso);
-      const ev=todos.slice(0,4).map(t=>`<div class="cm-cal-event ${t.done?'done':''}" title="${esc(t.title)}">${t.done?'✓':'•'} ${esc(t.title)}</div>`).join('');
-      return `<div class="cm-cal-day ${same?'':'other'} ${iso===todayISO?'today':''}"><b>${d.getDate()}</b>${ev}${todos.length>4?`<small>+${todos.length-4}</small>`:''}</div>`;
+      const homes=homeVisitsForDate(iso).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+      const events=[
+        ...homes.map(v=>{const c=state.cases.find(x=>x.id===v.caseId);return `<button type="button" class="cm-cal-event homevisit" data-homevisit="${v.id}" title="${esc(v.note||'家訪')}">⌂ ${v.time?esc(v.time)+' ':''}${esc(c?.name||'個案')}｜家訪</button>`;}),
+        ...todos.map(t=>`<div class="cm-cal-event ${t.done?'done':''}" title="${esc(t.title)}">${t.done?'✓':'•'} ${esc(t.title)}</div>`)
+      ];
+      const ev=events.slice(0,4).join('');
+      return `<div class="cm-cal-day ${same?'':'other'} ${iso===todayISO?'today':''}"><b>${d.getDate()}</b>${ev}${events.length>4?`<small>+${events.length-4}</small>`:''}</div>`;
     }).join('');
     document.getElementById('cmCalendar').innerHTML=`<div class="cm-calendar">${heads}${cells}</div>`;
   }
@@ -169,8 +182,16 @@
     const overdue=state.todos.filter(t=>!t.done&&t.date<todayISO);
     const currentCases=state.cases.filter(c=>caseActiveDuringMonth(c,currentMonth));
     const visitPending=currentCases.filter(c=>!completion(c,currentMonth)).length;
+    const todayHome=(state.homeVisits||[]).filter(v=>v.date===todayISO);
+    const overdueHome=(state.homeVisits||[]).filter(v=>{
+      if(v.date>=todayISO)return false;
+      const c=state.cases.find(x=>x.id===v.caseId);
+      return c&&!completion(c,v.date.slice(0,7));
+    });
     const parts=[];
     if(todayTodos.length)parts.push(`今天 ${todayTodos.length} 件待辦`);
+    if(todayHome.length)parts.push(`今天 ${todayHome.length} 案家訪`);
+    if(overdueHome.length)parts.push(`家訪逾期未完成 ${overdueHome.length} 案`);
     if(overdue.length)parts.push(`逾期 ${overdue.length} 件`);
     if(visitPending)parts.push(`本月尚有 ${visitPending} 案未訪`);
     const el=document.getElementById('cmReminder');
@@ -180,6 +201,128 @@
   function renderAll(){
     document.getElementById('cmMonth').value=selectedMonth;
     renderStats();renderCaseList();renderVisits();renderTodos();renderCalendar();renderReminder();
+  }
+
+
+  function downloadCaseTemplate(){
+    if(typeof XLSX==='undefined') return alert('Excel 元件尚未載入，請確認網路連線後重新整理頁面。');
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['個案姓名','開案日期','前次家訪月份'],
+      ['王小明','2026-08-01','2026-02']
+    ]);
+    ws['!cols']=[{wch:18},{wch:16},{wch:18}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'個案名單');
+    XLSX.writeFile(wb,'個管工作台_個案名單範本.xlsx');
+    cmTrack('excel_template_downloaded');
+  }
+
+  function normalizeExcelDate(v,monthOnly=false){
+    if(v===null||v===undefined||v==='') return '';
+    if(v instanceof Date&&!isNaN(v)){
+      return monthOnly?`${v.getFullYear()}-${pad(v.getMonth()+1)}`:dateISO(v);
+    }
+    if(typeof v==='number'&&typeof XLSX!=='undefined'){
+      const p=XLSX.SSF.parse_date_code(v);
+      if(p) return monthOnly?`${p.y}-${pad(p.m)}`:`${p.y}-${pad(p.m)}-${pad(p.d)}`;
+    }
+    const s=String(v).trim().replace(/[./]/g,'-');
+    const m=s.match(/^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$/);
+    if(!m) return '';
+    return monthOnly?`${m[1]}-${pad(m[2])}`:`${m[1]}-${pad(m[2])}-${pad(m[3]||1)}`;
+  }
+
+  async function previewExcelImport(file){
+    if(typeof XLSX==='undefined') return alert('Excel 元件尚未載入，請確認網路連線後重新整理頁面。');
+    try{
+      const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      const ok=[],errors=[],dupes=[];
+      rows.forEach((r,i)=>{
+        const name=String(r['個案姓名']||'').trim();
+        const openDate=normalizeExcelDate(r['開案日期']);
+        const prevHomeMonth=normalizeExcelDate(r['前次家訪月份'],true);
+        if(!name){errors.push(`第 ${i+2} 列：缺少個案姓名`);return;}
+        if(!openDate){errors.push(`第 ${i+2} 列：開案日期格式錯誤`);return;}
+        if(r['前次家訪月份']&&!prevHomeMonth){errors.push(`第 ${i+2} 列：前次家訪月份格式錯誤`);return;}
+        if(state.cases.some(c=>activeNow(c)&&c.name.trim()===name)){dupes.push(name);return;}
+        ok.push({name,openDate,prevHomeMonth});
+      });
+      window.cmPendingExcel=ok;
+      document.getElementById('cmExcelPreview').innerHTML=`
+        <div class="cm-import-summary">
+          <div><b>${rows.length}</b><span>讀取筆數</span></div>
+          <div><b>${ok.length}</b><span>可匯入</span></div>
+          <div><b>${dupes.length}</b><span>疑似重複</span></div>
+          <div><b>${errors.length}</b><span>格式錯誤</span></div>
+        </div>
+        ${dupes.length?`<div class="cm-small">疑似重複：${dupes.slice(0,10).map(esc).join('、')}${dupes.length>10?'…':''}</div>`:''}
+        ${errors.length?`<div class="cm-import-errors">${errors.slice(0,10).map(esc).join('<br>')}${errors.length>10?'<br>…':''}</div>`:''}
+        <div class="cm-modal-actions">
+          <button id="cmCancelExcel" class="secondary" type="button">取消</button>
+          <button id="cmConfirmExcel" class="primary" type="button" ${ok.length?'':'disabled'}>確認匯入 ${ok.length} 筆</button>
+        </div>`;
+      document.getElementById('cmExcelModal').classList.add('show');
+      document.getElementById('cmCancelExcel').onclick=()=>document.getElementById('cmExcelModal').classList.remove('show');
+      document.getElementById('cmConfirmExcel').onclick=confirmExcelImport;
+    }catch(e){
+      console.error(e);
+      alert('無法讀取 Excel。請使用工作台下載的範本，並確認檔案為 .xlsx 格式。');
+    }
+  }
+
+  async function confirmExcelImport(){
+    const items=window.cmPendingExcel||[];
+    items.forEach(x=>state.cases.push({
+      id:uid('case'),name:x.name,openDate:x.openDate,prevHomeMonth:x.prevHomeMonth,
+      status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()
+    }));
+    cmTrack('excel_cases_imported',{import_count:items.length});
+    document.getElementById('cmExcelModal').classList.remove('show');
+    document.getElementById('cmExcelFile').value='';
+    window.cmPendingExcel=[];
+    await save();
+  }
+
+  function openHomeVisitForm(existing=null){
+    const cases=activeCasesSortedForVisit();
+    const select=document.getElementById('cmHomeVisitCase');
+    select.innerHTML=cases.map(c=>`<option value="${c.id}">${esc(c.name)}${isHomeDue(c,selectedMonth)?'｜本月應訪':''}</option>`).join('');
+    document.getElementById('cmHomeVisitId').value=existing?.id||'';
+    if(existing) select.value=existing.caseId;
+    document.getElementById('cmHomeVisitDate').value=existing?.date||todayISO;
+    document.getElementById('cmHomeVisitTime').value=existing?.time||'';
+    document.getElementById('cmHomeVisitNote').value=existing?.note||'';
+    document.getElementById('cmHomeVisitDelete').style.display=existing?'':'none';
+    document.getElementById('cmHomeVisitModal').classList.add('show');
+  }
+
+  async function saveHomeVisit(){
+    const id=document.getElementById('cmHomeVisitId').value;
+    const caseId=document.getElementById('cmHomeVisitCase').value;
+    const date=document.getElementById('cmHomeVisitDate').value;
+    const time=document.getElementById('cmHomeVisitTime').value;
+    const note=document.getElementById('cmHomeVisitNote').value.trim();
+    if(!caseId||!date) return alert('請選擇個案與家訪日期。');
+    if(id){
+      const item=(state.homeVisits||[]).find(x=>x.id===id);
+      if(item) Object.assign(item,{caseId,date,time,note});
+      cmTrack('home_visit_schedule_edited');
+    }else{
+      state.homeVisits.push({id:uid('homevisit'),caseId,date,time,note,createdAt:new Date().toISOString()});
+      cmTrack('home_visit_scheduled');
+    }
+    document.getElementById('cmHomeVisitModal').classList.remove('show');
+    await save();
+  }
+
+  async function deleteHomeVisit(id){
+    if(!confirm('確定取消這筆家訪安排嗎？')) return;
+    state.homeVisits=state.homeVisits.filter(x=>x.id!==id);
+    cmTrack('home_visit_schedule_cancelled');
+    document.getElementById('cmHomeVisitModal').classList.remove('show');
+    await save();
   }
 
   async function addCase(){
@@ -222,7 +365,7 @@
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`LongcareNotes_個管工作台備份_${todayISO}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
   async function importBackup(file){
-    try{const raw=JSON.parse(await file.text());const incoming=raw?.data||raw;if(!incoming||!Array.isArray(incoming.cases)||!Array.isArray(incoming.visits)||!Array.isArray(incoming.todos))throw new Error('format');if(!confirm('匯入會以備份檔內容取代目前工作台資料，確定要繼續嗎？'))return;state=Object.assign(defaultState(),incoming);cmTrack('backup_imported');await save();alert('資料已成功匯入。');}catch(e){alert('無法匯入：備份檔格式不正確。');}
+    try{const raw=JSON.parse(await file.text());const incoming=raw?.data||raw;if(!incoming||!Array.isArray(incoming.cases)||!Array.isArray(incoming.visits)||!Array.isArray(incoming.todos))throw new Error('format');if(!Array.isArray(incoming.homeVisits))incoming.homeVisits=[];if(!confirm('匯入會以備份檔內容取代目前工作台資料，確定要繼續嗎？'))return;state=Object.assign(defaultState(),incoming);cmTrack('backup_imported');await save();alert('資料已成功匯入。');}catch(e){alert('無法匯入：備份檔格式不正確。');}
   }
   async function clearData(){if(!confirm('這會清除目前瀏覽器中的所有個管工作台資料。建議先匯出備份。確定清除嗎？'))return;if(!confirm('再次確認：清除後若沒有備份將無法復原。'))return;state=defaultState();await save();}
 
@@ -247,11 +390,18 @@
     document.getElementById('cmAddCase').onclick=addCase;
     document.getElementById('cmCaseSearch').oninput=renderCaseList;
     document.getElementById('cmShowClosed').onchange=renderCaseList;
-    document.getElementById('cmCaseList').onclick=async e=>{const tr=e.target.closest('[data-case]');if(!tr)return;const c=state.cases.find(x=>x.id===tr.dataset.case);if(!c)return;const action=e.target.dataset.action;if(action==='closeCase')closeCase(c);if(action==='restoreCase'){c.status='active';c.closedDate='';c.closeReason='';await save();}if(action==='deleteCase'&&confirm(`確定永久刪除「${c.name}」及其訪視紀錄嗎？`)){state.cases=state.cases.filter(x=>x.id!==c.id);state.visits=state.visits.filter(v=>v.caseId!==c.id);await save();}};
+    document.getElementById('cmCaseList').onclick=async e=>{const tr=e.target.closest('[data-case]');if(!tr)return;const c=state.cases.find(x=>x.id===tr.dataset.case);if(!c)return;const action=e.target.dataset.action;if(action==='closeCase')closeCase(c);if(action==='restoreCase'){c.status='active';c.closedDate='';c.closeReason='';await save();}if(action==='deleteCase'&&confirm(`確定永久刪除「${c.name}」及其訪視紀錄嗎？`)){state.cases=state.cases.filter(x=>x.id!==c.id);state.visits=state.visits.filter(v=>v.caseId!==c.id);state.homeVisits=(state.homeVisits||[]).filter(v=>v.caseId!==c.id);await save();}};
     document.getElementById('cmCloseConfirm').onclick=confirmClose;
     document.getElementById('cmCloseCancel').onclick=()=>document.getElementById('cmCloseModal').classList.remove('show');
     document.getElementById('cmVisitFilters').onclick=e=>{if(!e.target.dataset.filter)return;visitFilter=e.target.dataset.filter;document.querySelectorAll('#cmVisitFilters button').forEach(b=>b.classList.toggle('active',b===e.target));renderVisits();};
     document.getElementById('cmVisitTable').onchange=e=>{if(!e.target.dataset.visit)return;const tr=e.target.closest('[data-case]');setVisit(tr.dataset.case,e.target.dataset.visit,e.target.checked);};
+    document.getElementById('cmDownloadExcel').onclick=downloadCaseTemplate;
+    document.getElementById('cmExcelFile').onchange=e=>{const f=e.target.files?.[0];if(f)previewExcelImport(f);};
+    document.getElementById('cmScheduleHomeVisit').onclick=()=>openHomeVisitForm();
+    document.getElementById('cmHomeVisitCancel').onclick=()=>document.getElementById('cmHomeVisitModal').classList.remove('show');
+    document.getElementById('cmHomeVisitSave').onclick=saveHomeVisit;
+    document.getElementById('cmHomeVisitDelete').onclick=()=>{const id=document.getElementById('cmHomeVisitId').value;if(id)deleteHomeVisit(id);};
+    document.getElementById('cmCalendar').onclick=e=>{const btn=e.target.closest('[data-homevisit]');if(!btn)return;const item=(state.homeVisits||[]).find(x=>x.id===btn.dataset.homevisit);if(item)openHomeVisitForm(item);};
     document.getElementById('cmAddTodo').onclick=addTodo;
     document.getElementById('cmTodoList').onclick=async e=>{const row=e.target.closest('[data-todo]');if(!row)return;const t=state.todos.find(x=>x.id===row.dataset.todo);if(!t)return;if(e.target.dataset.action==='deleteTodo'){state.todos=state.todos.filter(x=>x.id!==t.id);await save();}};
     document.getElementById('cmTodoList').onchange=async e=>{if(e.target.dataset.action!=='toggleTodo')return;const row=e.target.closest('[data-todo]');const t=state.todos.find(x=>x.id===row.dataset.todo);if(t){t.done=e.target.checked;await save();}};
@@ -262,7 +412,7 @@
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();
