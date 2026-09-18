@@ -868,7 +868,12 @@
           });
 
         codeMatches.sort((a, b) => sortMatches(a, b, tokens.length));
-        interpretationMatches.sort((a, b) => sortMatches(a, b, tokens.length));
+        // 函釋依日期新到舊排列；同日再以搜尋相關度排序。
+        interpretationMatches.sort((a, b) => {
+          const dateA = asText(a.item?.date || '000-00-00');
+          const dateB = asText(b.item?.date || '000-00-00');
+          return dateB.localeCompare(dateA, 'zh-Hant') || sortMatches(a, b, tokens.length);
+        });
 
         const shownCodes = codeMatches.slice(0, 30);
         const shownInterpretations = interpretationMatches.slice(0, 30);
