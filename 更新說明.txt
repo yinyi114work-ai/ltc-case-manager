@@ -1,11 +1,13 @@
-v21.5 Notion 診斷修正版
+v21.6 路由＋Notion 診斷版
 
-已確認 v21.4 診斷程式本身有一個 scope 錯誤：
-updateNotionDiagnostics() 定義在 IIFE 內，但額外的 DOMContentLoaded listener 被放在 IIFE 外，因此 listener 無法呼叫該函式。
+修正：
+1. 個管工作台在 #casework 下重新整理後，會重新啟用 casework section，不再只剩頁首與頁尾。
+2. 保留 #casework 作為個管工作台固定路由。
+3. 保留 v21.5 的 Notion 連線診斷。
+4. JS/CSS 快取版本更新為 21.6。
+5. Cloudflare Worker 不用修改。
 
-v21.5：
-- 將診斷更新放回工作台初始化流程內。
-- 沒有 session 時也明確顯示「未送出（本機沒有 session）」。
-- Connector API 發生錯誤時直接顯示錯誤訊息。
-- JS/CSS 快取版本更新為 21.5。
-- 不修改 Cloudflare Worker。
+測試順序：
+A. 先進入個管工作台，確認網址為 #casework。
+B. 按 Safari 重新整理，確認仍留在完整個管工作台。
+C. 確認後再進行 Notion 授權測試。

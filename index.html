@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Longcare.Notes｜長照研究室</title>
-  <link rel="stylesheet" href="style.css?v=21.5" />
+  <link rel="stylesheet" href="style.css?v=21.6" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
@@ -347,7 +347,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.5"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.6"></script>
 
 <script>
 (function(){
@@ -394,6 +394,26 @@
   }else{
     showHome();
   }
+})();
+</script>
+
+
+<script>
+(function(){
+  function restoreCaseworkRoute(){
+    if(location.hash==='#casework'){
+      document.body.classList.add('casework-mode');
+      document.querySelectorAll('.tool-section').forEach(function(el){el.classList.remove('active');});
+      var s=document.getElementById('casework');
+      if(s)s.classList.add('active');
+    }
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',restoreCaseworkRoute);
+  }else{
+    restoreCaseworkRoute();
+  }
+  window.addEventListener('hashchange',restoreCaseworkRoute);
 })();
 </script>
 
