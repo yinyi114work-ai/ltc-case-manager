@@ -86,3 +86,13 @@
 .cm-notion-pill.connected{background:#e6efe8;color:#4f7059}.cm-notion-pill.syncing{background:#fff0d8;color:#8a6427}
 .cm-notion-detail{color:var(--muted);font-size:.9rem;line-height:1.55;margin:8px 0 14px}.cm-notion-actions{display:flex;gap:8px;flex-wrap:wrap}
 .cm-notion-message{display:none;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#f8f1e8;color:var(--muted);font-size:.88rem}.cm-notion-message.show{display:block}.cm-notion-message.error{background:#fff0ef;color:#9f4e45}
+
+.cm-block-title #cmNotionStatus{flex:0 0 auto;white-space:nowrap;word-break:keep-all}
+.cm-consent-check{display:flex!important;align-items:center;gap:10px;margin:16px 0!important;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.cm-consent-check input{width:20px!important;height:20px;flex:0 0 auto}
+.cm-disclaimer-intro{color:var(--muted);line-height:1.65}
+#cmDisclaimerAccept:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:560px){
+  .cm-block-title{align-items:flex-start}
+  .cm-block-title #cmNotionStatus{font-size:.76rem;padding:5px 9px}
+}

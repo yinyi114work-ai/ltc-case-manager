@@ -101,12 +101,17 @@
     if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}工作台變更會自動同步，也可手動立即同步。`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
   }
   function captureNotionSession(){
-    const hash=new URLSearchParams(location.hash.replace(/^#/,''));
-    const sid=hash.get('notion_session');
+    const query=new URLSearchParams(location.search);
+    const rawHash=location.hash.replace(/^#/,'');
+    const hashParams=new URLSearchParams(rawHash.includes('=')?rawHash:'');
+    const sid=query.get('notion_session')||hashParams.get('notion_session')||'';
     if(!sid)return false;
-    localStorage.setItem(NOTION_SESSION_KEY,sid);notionSession=sid;
-    hash.delete('notion_session');
-    history.replaceState(null,'',location.pathname+location.search+(hash.toString()?`#${hash}`:'#casework'));
+    localStorage.setItem(NOTION_SESSION_KEY,sid);
+    notionSession=sid;
+    query.delete('notion_session');
+    hashParams.delete('notion_session');
+    const cleanQuery=query.toString();
+    history.replaceState(null,'',location.pathname+(cleanQuery?`?${cleanQuery}`:'')+'#casework');
     return true;
   }
   async function checkNotionStatus(){
@@ -484,8 +489,13 @@
   function bind(){
     document.querySelector('.cm-appnav')?.addEventListener('click',e=>{const b=e.target.closest('[data-cm-view]');if(b)switchView(b.dataset.cmView);});
     const tab=document.querySelector('.tab[data-target="casework"]');
-    tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
-    document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
+    tab?.addEventListener('click',()=>{cmTrack('casework_open');setTimeout(()=>{renderAll();maybeNotify();},0);});
+    const disclaimerAgree=document.getElementById('cmDisclaimerAgree');
+    const disclaimerAccept=document.getElementById('cmDisclaimerAccept');
+    if(disclaimerAgree&&disclaimerAccept){
+      disclaimerAgree.onchange=()=>{disclaimerAccept.disabled=!disclaimerAgree.checked;};
+      disclaimerAccept.onclick=()=>{if(!disclaimerAgree.checked)return;localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
+    }
     document.getElementById('cmDisclaimerClose').onclick=hideDisclaimer;
     document.getElementById('cmPrivacyOpen').onclick=()=>document.getElementById('cmDisclaimer').classList.add('show');
     document.getElementById('cmMonth').onchange=e=>{selectedMonth=e.target.value||currentMonth;renderAll();};
@@ -518,7 +528,7 @@
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();

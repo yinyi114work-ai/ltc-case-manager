@@ -1,0 +1,14 @@
+Longcare.Notes 個管工作台 v21.1 修正版
+
+本次修改：
+1. Notion OAuth 回到個管工作台時，會先接收 notion_session，再檢查連線狀態。
+2. notion_session 同時支援 query string 與 URL hash 回傳。
+3. 首次使用提醒改在 OAuth/session 初始化完成後才顯示，避免擋住授權回傳。
+4. 原免責聲明改為「使用前提醒」，首次勾選確認後同一瀏覽器不再自動跳出。
+5. Notion 狀態標籤手機版固定單行，不再把「尚未連結」擠成直排。
+6. 保留本機 IndexedDB、備份匯入匯出與既有工作台功能。
+
+覆蓋 GitHub 專案根目錄的：
+- index.html
+- style.css
+- caseManagerDashboard.js

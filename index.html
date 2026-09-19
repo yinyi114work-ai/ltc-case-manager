@@ -274,15 +274,16 @@
 
 <div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
   <div class="cm-modal-card cm-disclaimer-card">
-    <h2 id="cmDisclaimerTitle">使用前請先了解資料儲存方式</h2>
+    <h2 id="cmDisclaimerTitle">使用前提醒</h2>
+    <p class="cm-disclaimer-intro">「長照研究室｜個管小工具」提供個案管理、追蹤提醒與工作整理等輔助功能。</p>
     <div class="cm-disclaimer-points">
-      <div><b>資料存在本機</b><span>你輸入的個案名單、家電訪、待辦與行事曆資料，儲存在目前使用的裝置與瀏覽器中。</span></div>
-      <div><b>長照研究室不保存個案資料</b><span>工作台不會主動把你輸入的個案資料傳送給長照研究室、AI 或雲端資料庫。</span></div>
-      <div><b>不消耗 AI 使用量</b><span>工作台的案量統計、勾選、提醒、匯入與匯出皆為本機功能。</span></div>
-      <div><b>請記得備份</b><span>更換裝置、瀏覽器，或清除網站資料時，本機資料可能消失，請定期使用「匯出完整備份」。</span></div>
+      <div><b>請確認紀錄內容</b><span>實際服務情形、主管機關規定及所屬單位作業規範，仍由使用者確認。</span></div>
+      <div><b>請依個資規範使用</b><span>若紀錄包含個人資料，請依個人資料保護及所屬機構資訊安全規範處理。</span></div>
+      <div><b>Notion 為選配同步</b><span>啟用後，工作台資料會同步至你自行授權的 Notion 工作空間；未啟用時仍可使用本機模式。</span></div>
+      <div><b>保留備份習慣</b><span>更換裝置、瀏覽器或清除網站資料前，建議先匯出完整備份。</span></div>
     </div>
-    <p class="cm-legal-note">本工具為個人工作輔助工具。使用者仍應依所屬機構之個人資料保護與資訊安全規範使用；建議避免於共用或不受信任的裝置輸入可直接識別個案身分的資料。裝置本身、瀏覽器外掛或其他第三方環境所造成的資訊安全風險，不在本工具可控制範圍內。</p>
-    <div class="cm-modal-actions"><button id="cmDisclaimerClose" class="secondary" type="button">稍後再看</button><button id="cmDisclaimerAccept" class="primary" type="button">我已了解並開始使用</button></div>
+    <label class="cm-consent-check"><input id="cmDisclaimerAgree" type="checkbox"> <span>我已閱讀並了解以上說明</span></label>
+    <div class="cm-modal-actions"><button id="cmDisclaimerClose" class="secondary" type="button">稍後再看</button><button id="cmDisclaimerAccept" class="primary" type="button" disabled>開始使用</button></div>
   </div>
 </div>
 
