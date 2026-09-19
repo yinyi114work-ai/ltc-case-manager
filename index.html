@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Longcare.Notes｜長照研究室</title>
-  <link rel="stylesheet" href="style.css?v=21.0" />
+  <link rel="stylesheet" href="style.css?v=21.2" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
@@ -327,7 +327,22 @@
 
 </main>
 <footer>© Longcare.Notes｜長照研究室｜AI整理僅供參考，實際請依中央及地方政府最新公告辦理。</footer>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.0"></script>
+<script>
+(function(){
+  try{
+    var q=new URLSearchParams(location.search);
+    var raw=(location.hash||'').replace(/^#/,'');
+    var hp=new URLSearchParams(raw.indexOf('=')>=0?raw:'');
+    var sid=q.get('notion_session')||hp.get('notion_session');
+    if(!sid)return;
+    localStorage.setItem('longcare_notion_session_v1',sid);
+    q.delete('notion_session');
+    hp.delete('notion_session');
+    var qs=q.toString();
+    history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
+  }catch(e){console.error('Notion session capture failed',e);}
+})();
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.2"></script>
 
 <script>
 (function(){

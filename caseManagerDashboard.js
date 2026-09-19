@@ -105,7 +105,10 @@
     const rawHash=location.hash.replace(/^#/,'');
     const hashParams=new URLSearchParams(rawHash.includes('=')?rawHash:'');
     const sid=query.get('notion_session')||hashParams.get('notion_session')||'';
-    if(!sid)return false;
+    if(!sid){
+      notionSession=localStorage.getItem(NOTION_SESSION_KEY)||'';
+      return !!notionSession;
+    }
     localStorage.setItem(NOTION_SESSION_KEY,sid);
     notionSession=sid;
     query.delete('notion_session');
@@ -121,8 +124,9 @@
       const r=await fetch(`${NOTION_CONNECTOR}/api/notion/status`,{headers:notionHeaders(),credentials:'omit'});
       const data=await r.json();
       notionConnected=!!data.connected;notionWorkspace=data.workspaceName||data.workspace_name||'';
-      if(!notionConnected){localStorage.removeItem(NOTION_SESSION_KEY);notionSession='';}
-      renderNotionStatus();return notionConnected;
+      renderNotionStatus();
+      if(!notionConnected&&notionSession)setNotionMessage('已收到 Notion 授權資訊，但 Connector 尚未確認連線；請重新整理一次。',true);
+      return notionConnected;
     }catch(e){notionConnected=false;renderNotionStatus();setNotionMessage('目前無法確認 Notion 連線狀態，本機資料仍可正常使用。',true);return false;}
   }
   function connectNotion(){
