@@ -71,3 +71,18 @@
   .tool-card{min-height:104px;padding:15px;border-radius:18px}
   .tool-card-icon{width:44px;height:44px;border-radius:13px;font-size:1.45rem}
 }
+
+/* 個管工作台 v20：首頁／個案／追蹤／行事曆 */
+.cm-appnav{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 16px;padding:6px;background:#f5eadc;border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 18px rgba(75,60,35,.06)}
+.cm-appnav button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:800;padding:10px 12px;border-radius:11px;cursor:pointer}.cm-appnav button.active{background:#fff;color:var(--ink);box-shadow:0 2px 9px rgba(75,60,35,.08)}
+.cm-view{display:none}.cm-view.active{display:block}.cm-home-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.cm-focus-list{display:grid;gap:8px;margin-top:12px}.cm-focus-item{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.cm-focus-item strong{display:block}.cm-focus-item small{color:var(--muted)}
+.cm-notion-card{background:linear-gradient(180deg,#fff,#fbf8f4)}.cm-notion-status{display:flex;gap:10px;align-items:flex-start;margin:16px 0}.cm-notion-status small{display:block;color:var(--muted);margin-top:3px;line-height:1.45}.cm-status-dot{width:10px;height:10px;border-radius:50%;background:#67846f;margin-top:6px;box-shadow:0 0 0 4px #e8f0ea}.cm-button-link{display:inline-flex;text-decoration:none;align-items:center;justify-content:center}.cm-track-legend{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.cm-track-legend span,.cm-type{font-size:.78rem;font-weight:800;border-radius:999px;padding:3px 8px;background:#eee}.cm-type.general{background:#f2eadf;color:#745f49}.cm-type.incident{background:#f7e1de;color:#9a4f46}.cm-type.resource{background:#e4eef2;color:#527482}
+@media(max-width:900px){.cm-home-grid{grid-template-columns:1fr}.cm-appnav{top:0}.cm-appnav button{padding:9px 6px}.cm-todo-form{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.cm-appnav{gap:3px;padding:4px}.cm-appnav button{font-size:.9rem}.cm-stats{grid-template-columns:1fr 1fr}.cm-todo-form{grid-template-columns:1fr}}
+
+/* v21 Notion sync */
+.cm-notion-panel{background:linear-gradient(180deg,#fff,#fbf8f4)}
+.cm-notion-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#eee9e4;color:#74675d;font-size:.8rem;font-weight:800}
+.cm-notion-pill.connected{background:#e6efe8;color:#4f7059}.cm-notion-pill.syncing{background:#fff0d8;color:#8a6427}
+.cm-notion-detail{color:var(--muted);font-size:.9rem;line-height:1.55;margin:8px 0 14px}.cm-notion-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cm-notion-message{display:none;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#f8f1e8;color:var(--muted);font-size:.88rem}.cm-notion-message.show{display:block}.cm-notion-message.error{background:#fff0ef;color:#9f4e45}

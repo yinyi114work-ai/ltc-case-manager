@@ -6,6 +6,13 @@
   const STORE = 'workspace';
   const STATE_KEY = 'main';
   const DISCLAIMER_KEY = 'longcareNotes.caseDashboard.disclaimer.v1';
+  const NOTION_CONNECTOR = 'https://longcare-notion-connector.yinyi114work.workers.dev';
+  const NOTION_SESSION_KEY = 'longcareNotes.notion.session.v1';
+  let notionSession = '';
+  let notionConnected = false;
+  let notionWorkspace = '';
+  let notionSyncTimer = null;
+  let notionSyncing = false;
   const pad = n => String(n).padStart(2, '0');
   const now = new Date();
   const todayISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
@@ -76,7 +83,84 @@
   }
   function dbGet(){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly');const r=tx.objectStore(STORE).get(STATE_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
   function dbPut(){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(state,STATE_KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
-  async function save(){await dbPut();renderAll();}
+  async function save(){await dbPut();renderAll();scheduleNotionSync();}
+
+  function notionHeaders(){
+    return notionSession ? {'Authorization':`Bearer ${notionSession}`,'Content-Type':'application/json'} : {'Content-Type':'application/json'};
+  }
+  function setNotionMessage(message='',error=false){
+    const el=document.getElementById('cmNotionMessage');if(!el)return;
+    el.textContent=message;el.classList.toggle('show',!!message);el.classList.toggle('error',!!error);
+  }
+  function renderNotionStatus(syncing=false){
+    const status=document.getElementById('cmNotionStatus'),connect=document.getElementById('cmNotionConnect'),sync=document.getElementById('cmNotionSync'),disconnect=document.getElementById('cmNotionDisconnect'),detail=document.getElementById('cmNotionDetail');
+    if(!status)return;
+    status.className='cm-notion-status'+(syncing?' syncing':notionConnected?' connected':'');
+    status.textContent=syncing?'同步中…':notionConnected?'已連結':'尚未連結';
+    connect.hidden=notionConnected;sync.hidden=!notionConnected;disconnect.hidden=!notionConnected;
+    if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}工作台變更會自動同步，也可手動立即同步。`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
+  }
+  function captureNotionSession(){
+    const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+    const sid=hash.get('notion_session');
+    if(!sid)return false;
+    localStorage.setItem(NOTION_SESSION_KEY,sid);notionSession=sid;
+    hash.delete('notion_session');
+    history.replaceState(null,'',location.pathname+location.search+(hash.toString()?`#${hash}`:'#casework'));
+    return true;
+  }
+  async function checkNotionStatus(){
+    notionSession=localStorage.getItem(NOTION_SESSION_KEY)||'';
+    if(!notionSession){notionConnected=false;renderNotionStatus();return false;}
+    try{
+      const r=await fetch(`${NOTION_CONNECTOR}/api/notion/status`,{headers:notionHeaders(),credentials:'omit'});
+      const data=await r.json();
+      notionConnected=!!data.connected;notionWorkspace=data.workspaceName||data.workspace_name||'';
+      if(!notionConnected){localStorage.removeItem(NOTION_SESSION_KEY);notionSession='';}
+      renderNotionStatus();return notionConnected;
+    }catch(e){notionConnected=false;renderNotionStatus();setNotionMessage('目前無法確認 Notion 連線狀態，本機資料仍可正常使用。',true);return false;}
+  }
+  function connectNotion(){
+    const returnTo=encodeURIComponent(location.origin+location.pathname+'#casework');
+    location.href=`${NOTION_CONNECTOR}/auth/notion/start?return_to=${returnTo}`;
+  }
+  function remoteStateFrom(data){
+    const candidate=data?.state?.data||data?.state||data?.data?.data||data?.data||null;
+    return candidate&&Array.isArray(candidate.cases)&&Array.isArray(candidate.visits)&&Array.isArray(candidate.todos)?candidate:null;
+  }
+  async function pullNotionState(){
+    if(!notionConnected)return false;
+    try{
+      renderNotionStatus(true);setNotionMessage('正在讀取 Notion 同步資料…');
+      const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{headers:notionHeaders(),credentials:'omit'});
+      if(r.status===404){renderNotionStatus();setNotionMessage('Notion 尚無工作台資料，將以目前本機資料建立第一份同步。');await pushNotionState(true);return true;}
+      const data=await r.json();if(!r.ok)throw new Error(data?.error||`HTTP ${r.status}`);
+      const remote=remoteStateFrom(data);
+      if(remote){state=Object.assign(defaultState(),remote);if(!Array.isArray(state.homeVisits))state.homeVisits=[];await dbPut();renderAll();setNotionMessage('已從 Notion 載入最新工作台資料。');}
+      else{setNotionMessage('Notion 尚無工作台資料，將以目前本機資料建立第一份同步。');await pushNotionState(true);}
+      renderNotionStatus();return true;
+    }catch(e){console.error(e);renderNotionStatus();setNotionMessage('讀取 Notion 資料失敗，本機資料未受影響。',true);return false;}
+  }
+  async function pushNotionState(silent=false){
+    if(!notionConnected||notionSyncing)return false;
+    notionSyncing=true;renderNotionStatus(true);if(!silent)setNotionMessage('正在同步到 Notion…');
+    try{
+      const payload={app:'Longcare.Notes 個管工作台',schemaVersion:2,updatedAt:new Date().toISOString(),data:state};
+      const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{method:'PUT',headers:notionHeaders(),body:JSON.stringify(payload),credentials:'omit'});
+      const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data?.error||`HTTP ${r.status}`);
+      setNotionMessage(`已同步到 Notion｜${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`);return true;
+    }catch(e){console.error(e);setNotionMessage('Notion 同步失敗；資料已保留在本機，可稍後再按「立即同步」。',true);return false;}
+    finally{notionSyncing=false;renderNotionStatus();}
+  }
+  function scheduleNotionSync(){
+    if(!notionConnected)return;clearTimeout(notionSyncTimer);notionSyncTimer=setTimeout(()=>pushNotionState(true),900);
+  }
+  async function disconnectNotion(){
+    if(!confirm('確定中斷這台裝置與 Notion 的連結嗎？本機資料不會被刪除。'))return;
+    try{await fetch(`${NOTION_CONNECTOR}/api/notion/disconnect`,{method:'POST',headers:notionHeaders(),credentials:'omit'});}catch(e){}
+    localStorage.removeItem(NOTION_SESSION_KEY);notionSession='';notionConnected=false;notionWorkspace='';renderNotionStatus();setNotionMessage('已中斷 Notion 連結；目前改回本機模式。');
+  }
+
 
   function showDisclaimer(){
     if(localStorage.getItem(DISCLAIMER_KEY)==='accepted')return;
@@ -156,7 +240,8 @@
     const list=state.todos.filter(t=>t.date.slice(0,7)===selectedMonth).sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date));
     if(!list.length){el.innerHTML='<div class="cm-empty">這個月還沒有待辦事項。</div>';return;}
     const p={high:'重要',normal:'一般',low:'稍後'};
-    el.innerHTML=list.map(t=>`<div class="cm-todo ${t.done?'done':''}" data-todo="${t.id}"><label class="cm-todo-check"><input type="checkbox" data-action="toggleTodo" ${t.done?'checked':''}><span></span></label><div class="cm-todo-main"><strong>${esc(t.title)}</strong><div class="cm-small">${esc(t.date)}　<span class="cm-priority ${t.priority}">${p[t.priority]||'一般'}</span>${t.note?`　${esc(t.note)}`:''}</div></div><button class="cm-link danger" data-action="deleteTodo">刪除</button></div>`).join('');
+    const types={general:'一般任務',incident:'異常事件',resource:'資源連結'};
+    el.innerHTML=list.map(t=>{const type=t.type||'general';return `<div class="cm-todo ${t.done?'done':''}" data-todo="${t.id}"><label class="cm-todo-check"><input type="checkbox" data-action="toggleTodo" ${t.done?'checked':''}><span></span></label><div class="cm-todo-main"><strong>${esc(t.title)}</strong><div class="cm-small">${esc(t.date)}　<span class="cm-type ${type}">${types[type]||'一般任務'}</span>　<span class="cm-priority ${t.priority}">${p[t.priority]||'一般'}</span>${t.note?`　${esc(t.note)}`:''}</div></div><button class="cm-link danger" data-action="deleteTodo">刪除</button></div>`}).join('');
   }
 
   function calendarCells(m){const [y,mo]=m.split('-').map(Number);const first=new Date(y,mo-1,1);const start=new Date(first);start.setDate(1-first.getDay());return Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});}
@@ -198,9 +283,20 @@
     if(parts.length){el.innerHTML=`<strong>今日提醒：</strong>${parts.join('｜')}`;el.classList.add('show');}else{el.classList.remove('show');}
   }
 
+  function renderHomeFocus(){
+    const el=document.getElementById('cmHomeFocus');if(!el)return;
+    const overdue=state.todos.filter(t=>!t.done&&t.date<todayISO).length;
+    const today=state.todos.filter(t=>!t.done&&t.date===todayISO).length;
+    const monthCases=state.cases.filter(c=>caseActiveDuringMonth(c,currentMonth));
+    const pending=monthCases.filter(c=>!completion(c,currentMonth)).length;
+    const homeToday=(state.homeVisits||[]).filter(v=>v.date===todayISO).length;
+    const rows=[['逾期追蹤',overdue,'需要優先處理'],['今天追蹤',today,'今天到期'],['本月家／電訪未完成',pending,'依目前月份計算'],['今天已安排家訪',homeToday,'行事曆安排']];
+    el.innerHTML=rows.map(([label,count,note])=>`<div class="cm-focus-item"><div><strong>${label}</strong><small>${note}</small></div><b>${count}</b></div>`).join('');
+  }
+
   function renderAll(){
     document.getElementById('cmMonth').value=selectedMonth;
-    renderStats();renderCaseList();renderVisits();renderTodos();renderCalendar();renderReminder();
+    renderStats();renderCaseList();renderVisits();renderTodos();renderCalendar();renderReminder();renderHomeFocus();
   }
 
 
@@ -355,7 +451,7 @@
   }
   async function addTodo(){
     const title=document.getElementById('cmTodoTitle').value.trim();if(!title)return alert('請輸入待辦事項。');
-    state.todos.push({id:uid('todo'),title,date:document.getElementById('cmTodoDate').value||todayISO,priority:document.getElementById('cmTodoPriority').value,note:document.getElementById('cmTodoNote').value.trim(),done:false});cmTrack('todo_added');
+    state.todos.push({id:uid('todo'),title,date:document.getElementById('cmTodoDate').value||todayISO,type:document.getElementById('cmTodoType')?.value||'general',priority:document.getElementById('cmTodoPriority').value,note:document.getElementById('cmTodoNote').value.trim(),done:false});cmTrack('todo_added');
     document.getElementById('cmTodoTitle').value='';document.getElementById('cmTodoNote').value='';await save();
   }
 
@@ -379,7 +475,14 @@
     const key=`cmNotify_${todayISO}`;if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');new Notification('Longcare.Notes 今日提醒',{body:`你有 ${due.length} 件今日或逾期待辦。`});
   }
 
+  function switchView(name){
+    document.querySelectorAll('.cm-appnav [data-cm-view]').forEach(b=>b.classList.toggle('active',b.dataset.cmView===name));
+    document.querySelectorAll('.cm-view[data-cm-panel]').forEach(p=>p.classList.toggle('active',p.dataset.cmPanel===name));
+    cmTrack('casework_view',{view:name});
+  }
+
   function bind(){
+    document.querySelector('.cm-appnav')?.addEventListener('click',e=>{const b=e.target.closest('[data-cm-view]');if(b)switchView(b.dataset.cmView);});
     const tab=document.querySelector('.tab[data-target="casework"]');
     tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
     document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
@@ -409,10 +512,13 @@
     document.getElementById('cmImport').onchange=e=>{const f=e.target.files?.[0];if(f)importBackup(f);e.target.value='';};
     document.getElementById('cmClear').onclick=clearData;
     document.getElementById('cmNotify').onclick=enableNotifications;
+    document.getElementById('cmNotionConnect').onclick=connectNotion;
+    document.getElementById('cmNotionSync').onclick=()=>pushNotionState(false);
+    document.getElementById('cmNotionDisconnect').onclick=disconnectNotion;
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();
