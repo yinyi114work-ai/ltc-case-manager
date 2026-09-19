@@ -1,15 +1,8 @@
-v21.2 OAuth 修正版
+v21.3 Notion session key 修正
 
-1. 在網站其他路由程式執行前，先擷取 notion_session。
-2. session 立即存入 localStorage，再清理網址。
-3. JS/CSS cache-busting 更新為 v21.2，避免 Safari / GitHub Pages 繼續使用舊快取。
-4. 工作台初始化保留第二層 session 擷取。
-5. Connector 暫時回報未連線時，不再立刻刪除已收到的 session。
-6. 保留 v21.1 的「使用前提醒」與手機版狀態排版。
+v21.2 的明確錯誤：
+index.html 將 OAuth session 存入 longcare_notion_session_v1，
+但工作台實際讀取的是 ltc_notion_session_v1。
 
-請覆蓋 GitHub 根目錄：
-- index.html
-- caseManagerDashboard.js
-- style.css
-
+v21.3 已統一為 ltc_notion_session_v1，並更新快取版本。
 Cloudflare Worker 不用修改。
