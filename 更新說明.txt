@@ -1,13 +1,15 @@
-v21.6 路由＋Notion 診斷版
+v21.7 Session Key + 路由修正版
 
-修正：
-1. 個管工作台在 #casework 下重新整理後，會重新啟用 casework section，不再只剩頁首與頁尾。
-2. 保留 #casework 作為個管工作台固定路由。
-3. 保留 v21.5 的 Notion 連線診斷。
-4. JS/CSS 快取版本更新為 21.6。
-5. Cloudflare Worker 不用修改。
+這次已確認真正原因：
+caseManagerDashboard.js 實際使用的 session key 是：
+longcareNotes.notion.session.v1
 
-測試順序：
-A. 先進入個管工作台，確認網址為 #casework。
-B. 按 Safari 重新整理，確認仍留在完整個管工作台。
-C. 確認後再進行 Notion 授權測試。
+先前 index.html 的 OAuth 提前接收程式使用了不同 key，
+所以 session 雖然從 Worker 帶回，工作台仍讀不到。
+
+v21.7 已：
+1. 統一 session key 為 longcareNotes.notion.session.v1。
+2. 主路由直接識別 #casework，重新整理不再被 showHome() 清掉。
+3. 保留 Notion 診斷區。
+4. 快取版本更新為 21.7。
+5. Cloudflare Worker 維持目前已部署版本，不需再改。

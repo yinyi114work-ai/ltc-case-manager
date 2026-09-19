@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Longcare.Notes｜長照研究室</title>
-  <link rel="stylesheet" href="style.css?v=21.6" />
+  <link rel="stylesheet" href="style.css?v=21.7" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
@@ -340,14 +340,14 @@
     var hp=new URLSearchParams(raw.indexOf('=')>=0?raw:'');
     var sid=q.get('notion_session')||hp.get('notion_session');
     if(!sid)return;
-    localStorage.setItem('ltc_notion_session_v1',sid);
+    localStorage.setItem('longcareNotes.notion.session.v1',sid);
     q.delete('notion_session');
     hp.delete('notion_session');
     var qs=q.toString();
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.6"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.7"></script>
 
 <script>
 (function(){
@@ -388,7 +388,14 @@
   back.addEventListener('click',showHome);
 
   const hash=location.hash.replace('#','');
-  if(hash && document.querySelector('.tab[data-target="'+hash+'"]')){
+  if(hash==='casework'){
+    document.body.classList.add('casework-mode');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    const cw=document.getElementById('casework');
+    if(cw)cw.classList.add('active');
+    home.hidden=true;
+    pageBar.hidden=false;
+  }else if(hash && document.querySelector('.tab[data-target="'+hash+'"]')){
     const tab=document.querySelector('.tab[data-target="'+hash+'"]');
     openTool(hash,tab.textContent.trim());
   }else{
