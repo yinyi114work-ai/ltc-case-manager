@@ -178,8 +178,10 @@ function captureNotionSession(){
         updateSyncDiagnostic(`HTTP ${r.status} / ${detail}`);
         throw new Error(detail);
       }
-      notionLastSync=data.savedAt||new Date().toISOString();
-      localStorage.setItem(NOTION_LAST_SYNC_KEY,notionLastSync);
+      const syncedAt=data.savedAt||new Date().toISOString();
+      if(typeof NOTION_LAST_SYNC_KEY!=='undefined'){
+        localStorage.setItem(NOTION_LAST_SYNC_KEY,syncedAt);
+      }
       updateSyncDiagnostic(`HTTP ${r.status} / 寫入成功`);
       renderNotionStatus();
       if(!silent)setNotionMessage('Notion 同步完成。');

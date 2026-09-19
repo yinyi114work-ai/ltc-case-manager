@@ -1,1 +1,12 @@
-v21.8：新增 Notion 同步寫入診斷。OAuth/Session 不變；Cloudflare 不用修改。覆蓋後不需重新授權，直接按「立即同步」。
+v21.9 同步診斷修正版
+
+本版只修正 v21.8 診斷程式誤用不存在的 notionLastSync 變數。
+未修改：
+- OAuth
+- Notion session key
+- #casework 路由
+- IndexedDB 資料
+- Cloudflare Worker
+- Notion 連線流程
+
+覆蓋 GitHub 後不需重新授權，直接按「立即同步」。
