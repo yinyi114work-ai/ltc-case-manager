@@ -1,1 +1,11 @@
-v21.4 Notion 診斷版：顯示 session 是否收到/儲存，以及 Connector status 結果。Cloudflare Worker 不用修改。
+v21.5 Notion 診斷修正版
+
+已確認 v21.4 診斷程式本身有一個 scope 錯誤：
+updateNotionDiagnostics() 定義在 IIFE 內，但額外的 DOMContentLoaded listener 被放在 IIFE 外，因此 listener 無法呼叫該函式。
+
+v21.5：
+- 將診斷更新放回工作台初始化流程內。
+- 沒有 session 時也明確顯示「未送出（本機沒有 session）」。
+- Connector API 發生錯誤時直接顯示錯誤訊息。
+- JS/CSS 快取版本更新為 21.5。
+- 不修改 Cloudflare Worker。

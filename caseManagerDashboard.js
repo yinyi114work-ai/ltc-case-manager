@@ -127,7 +127,7 @@ function captureNotionSession(){
   }
   async function checkNotionStatus(){
     notionSession=localStorage.getItem(NOTION_SESSION_KEY)||'';
-    if(!notionSession){notionConnected=false;renderNotionStatus();return false;}
+    if(!notionSession){notionConnected=false;renderNotionStatus();updateNotionDiagnostics('未送出（本機沒有 session）');return false;}
     try{
       const r=await fetch(`${NOTION_CONNECTOR}/api/notion/status`,{headers:notionHeaders(),credentials:'omit'});
       const data=await r.json();
@@ -136,7 +136,7 @@ function captureNotionSession(){
       updateNotionDiagnostics('HTTP '+r.status+' / connected='+String(!!data.connected));
       if(!notionConnected&&notionSession)setNotionMessage('已收到 Notion 授權資訊，但 Connector 尚未確認連線；請重新整理一次。',true);
       return notionConnected;
-    }catch(e){notionConnected=false;renderNotionStatus();setNotionMessage('目前無法確認 Notion 連線狀態，本機資料仍可正常使用。',true);return false;}
+    }catch(e){notionConnected=false;renderNotionStatus();updateNotionDiagnostics('API 錯誤：'+(e?.message||String(e)));setNotionMessage('目前無法確認 Notion 連線狀態，本機資料仍可正常使用。',true);return false;}
   }
   function connectNotion(){
     const returnTo=encodeURIComponent(location.origin+location.pathname+'#casework');
@@ -541,9 +541,7 @@ function captureNotionSession(){
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];const returnedFromNotion=captureNotionSession();updateNotionDiagnostics();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();
-
-document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>updateNotionDiagnostics(),200));
