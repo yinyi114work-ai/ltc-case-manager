@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Longcare.Notes｜長照研究室</title>
-  <link rel="stylesheet" href="style.css?v=21.3" />
+  <link rel="stylesheet" href="style.css?v=21.4" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
@@ -233,7 +233,12 @@
         <div class="cm-notion-actions"><button id="cmNotionConnect" class="primary" type="button">連結我的 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="secondary danger-outline" type="button" hidden>中斷連結</button></div>
         <div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div>
         <p class="cm-legal-note">授權會前往 Notion 官方頁面；Notion access token 不會存放在前端。</p>
-      </section>
+      <div id="cmNotionDiag" style="margin-top:14px;padding:12px 14px;border:1px dashed #cbb9a7;border-radius:12px;background:#fffaf4;font-size:13px;line-height:1.7;word-break:break-word">
+<strong>Notion 連線診斷</strong><br>
+<span id="cmDiagUrl">OAuth session：檢查中</span><br>
+<span id="cmDiagLocal">本機 session：檢查中</span><br>
+<span id="cmDiagApi">Connector status：尚未檢查</span>
+</div></section>
     </div>
     <section id="cmData" class="panel cm-block cm-data-block">
       <div class="cm-block-title"><div><h3>資料與備份</h3><p>本機資料仍是目前主要資料來源；換裝置或清除網站資料前請先備份。</p></div></div>
@@ -342,7 +347,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.3"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.4"></script>
 
 <script>
 (function(){

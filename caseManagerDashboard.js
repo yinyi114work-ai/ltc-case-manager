@@ -100,7 +100,15 @@
     connect.hidden=notionConnected;sync.hidden=!notionConnected;disconnect.hidden=!notionConnected;
     if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}工作台變更會自動同步，也可手動立即同步。`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
   }
-  function captureNotionSession(){
+  function updateNotionDiagnostics(apiText){
+  const raw=(location.search||'')+' '+(location.hash||'');
+  const stored=localStorage.getItem(NOTION_SESSION_KEY)||'';
+  const a=document.getElementById('cmDiagUrl'),b=document.getElementById('cmDiagLocal'),c=document.getElementById('cmDiagApi');
+  if(a)a.textContent='OAuth session（目前網址）：'+(/notion_session=/.test(raw)?'已收到':'網址已清理／目前沒有');
+  if(b)b.textContent='本機 session：'+(stored?'已儲存（'+stored.length+' 字元）':'未儲存');
+  if(c&&apiText)c.textContent='Connector status：'+apiText;
+}
+function captureNotionSession(){
     const query=new URLSearchParams(location.search);
     const rawHash=location.hash.replace(/^#/,'');
     const hashParams=new URLSearchParams(rawHash.includes('=')?rawHash:'');
@@ -125,6 +133,7 @@
       const data=await r.json();
       notionConnected=!!data.connected;notionWorkspace=data.workspaceName||data.workspace_name||'';
       renderNotionStatus();
+      updateNotionDiagnostics('HTTP '+r.status+' / connected='+String(!!data.connected));
       if(!notionConnected&&notionSession)setNotionMessage('已收到 Notion 授權資訊，但 Connector 尚未確認連線；請重新整理一次。',true);
       return notionConnected;
     }catch(e){notionConnected=false;renderNotionStatus();setNotionMessage('目前無法確認 Notion 連線狀態，本機資料仍可正常使用。',true);return false;}
@@ -536,3 +545,5 @@
   }
   window.addEventListener('DOMContentLoaded',init);
 })();
+
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>updateNotionDiagnostics(),200));

@@ -1,8 +1,1 @@
-v21.3 Notion session key 修正
-
-v21.2 的明確錯誤：
-index.html 將 OAuth session 存入 longcare_notion_session_v1，
-但工作台實際讀取的是 ltc_notion_session_v1。
-
-v21.3 已統一為 ltc_notion_session_v1，並更新快取版本。
-Cloudflare Worker 不用修改。
+v21.4 Notion 診斷版：顯示 session 是否收到/儲存，以及 Connector status 結果。Cloudflare Worker 不用修改。
