@@ -1,15 +1,1 @@
-v21.7 Session Key + 路由修正版
-
-這次已確認真正原因：
-caseManagerDashboard.js 實際使用的 session key 是：
-longcareNotes.notion.session.v1
-
-先前 index.html 的 OAuth 提前接收程式使用了不同 key，
-所以 session 雖然從 Worker 帶回，工作台仍讀不到。
-
-v21.7 已：
-1. 統一 session key 為 longcareNotes.notion.session.v1。
-2. 主路由直接識別 #casework，重新整理不再被 showHome() 清掉。
-3. 保留 Notion 診斷區。
-4. 快取版本更新為 21.7。
-5. Cloudflare Worker 維持目前已部署版本，不需再改。
+v21.8：新增 Notion 同步寫入診斷。OAuth/Session 不變；Cloudflare 不用修改。覆蓋後不需重新授權，直接按「立即同步」。

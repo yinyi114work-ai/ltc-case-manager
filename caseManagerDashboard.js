@@ -100,7 +100,11 @@
     connect.hidden=notionConnected;sync.hidden=!notionConnected;disconnect.hidden=!notionConnected;
     if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}工作台變更會自動同步，也可手動立即同步。`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
   }
-  function updateNotionDiagnostics(apiText){
+  function updateSyncDiagnostic(text){
+  const el=document.getElementById('cmDiagSync');
+  if(el)el.textContent='同步寫入：'+text;
+}
+function updateNotionDiagnostics(apiText){
   const raw=(location.search||'')+' '+(location.hash||'');
   const stored=localStorage.getItem(NOTION_SESSION_KEY)||'';
   const a=document.getElementById('cmDiagUrl'),b=document.getElementById('cmDiagLocal'),c=document.getElementById('cmDiagApi');
@@ -160,16 +164,34 @@ function captureNotionSession(){
     }catch(e){console.error(e);renderNotionStatus();setNotionMessage('讀取 Notion 資料失敗，本機資料未受影響。',true);return false;}
   }
   async function pushNotionState(silent=false){
-    if(!notionConnected||notionSyncing)return false;
-    notionSyncing=true;renderNotionStatus(true);if(!silent)setNotionMessage('正在同步到 Notion…');
+    if(!notionSession){updateSyncDiagnostic('未送出（本機沒有 session）');if(!silent)setNotionMessage('尚未連結 Notion。',true);return false;}
+    renderNotionStatus(true);
+    updateSyncDiagnostic('送出中…');
     try{
-      const payload={app:'Longcare.Notes 個管工作台',schemaVersion:2,updatedAt:new Date().toISOString(),data:state};
+      const payload={state:state};
       const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{method:'PUT',headers:notionHeaders(),body:JSON.stringify(payload),credentials:'omit'});
-      const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data?.error||`HTTP ${r.status}`);
-      setNotionMessage(`已同步到 Notion｜${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`);return true;
-    }catch(e){console.error(e);setNotionMessage('Notion 同步失敗；資料已保留在本機，可稍後再按「立即同步」。',true);return false;}
-    finally{notionSyncing=false;renderNotionStatus();}
+      const raw=await r.text();
+      let data={};
+      try{data=raw?JSON.parse(raw):{};}catch{data={message:raw||'非 JSON 回應'};}
+      if(!r.ok){
+        const detail=data.message||data.error||`HTTP ${r.status}`;
+        updateSyncDiagnostic(`HTTP ${r.status} / ${detail}`);
+        throw new Error(detail);
+      }
+      notionLastSync=data.savedAt||new Date().toISOString();
+      localStorage.setItem(NOTION_LAST_SYNC_KEY,notionLastSync);
+      updateSyncDiagnostic(`HTTP ${r.status} / 寫入成功`);
+      renderNotionStatus();
+      if(!silent)setNotionMessage('Notion 同步完成。');
+      return true;
+    }catch(e){
+      renderNotionStatus();
+      if(!/HTTP \d+/.test(document.getElementById('cmDiagSync')?.textContent||''))updateSyncDiagnostic('網路/API 錯誤：'+(e?.message||String(e)));
+      if(!silent)setNotionMessage('Notion 同步失敗；資料已保留在本機，可稍後再按「立即同步」。',true);
+      return false;
+    }
   }
+
   function scheduleNotionSync(){
     if(!notionConnected)return;clearTimeout(notionSyncTimer);notionSyncTimer=setTimeout(()=>pushNotionState(true),900);
   }
