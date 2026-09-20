@@ -205,15 +205,7 @@
     <button id="cmPrivacyOpen" class="secondary" type="button">資料與隱私說明</button>
   </div>
   <div id="cmStorageError" class="cm-storage-error">目前瀏覽器無法使用本機資料庫，請確認不是無痕模式或受限制的瀏覽環境。</div>
-
-  <nav class="cm-appnav" aria-label="個管工作台導覽">
-    <button type="button" class="active" data-cm-view="home">首頁</button>
-    <button type="button" data-cm-view="cases">個案</button>
-    <button type="button" data-cm-view="tracking">追蹤</button>
-    <button type="button" data-cm-view="calendar">行事曆</button>
-  </nav>
-
-  <div class="cm-view active" data-cm-panel="home">
+<div class="cm-view active" data-cm-panel="home">
     <div id="cmReminder" class="cm-reminder"></div>
     <div class="panel cm-monthbar">
       <label>檢視月份<input id="cmMonth" type="month"></label>
@@ -247,8 +239,16 @@
           <label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label>
           <label>身分別<select id="cmCaseIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label>
           <label>開案日期<input id="cmOpenDate" type="date"></label>
-          <label>收案狀況<input id="cmCaseIntake" placeholder="例：出備新案"></label>
-          <label>計畫進度<input id="cmCasePlan" placeholder="例：待擬照顧計畫"></label>
+          <label>收案狀況<select id="cmCaseIntake">
+<option value="">未填</option>
+<option>新案待處理</option><option>已聯繫</option><option>已完成家訪</option>
+<option>計畫處理中</option><option>服務銜接中</option><option>已完成收案</option>
+</select></label>
+          <label>計畫進度<select id="cmCasePlan">
+<option value="">未填</option>
+<option>待擬照顧計畫</option><option>計畫撰寫中</option><option>待送審</option>
+<option>送審中</option><option>退回修改</option><option>已完成</option>
+</select></label>
           <label>最近照專評估日<input id="cmCaseAssessment" type="date"></label>
           <label>AA01 日期<input id="cmCaseAA01" type="date"></label>
           <label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label>
@@ -285,7 +285,7 @@
     </section>
   </div>
 </section>
-<div class="cm-version" aria-label="版本">v22.1</div>
+<div class="cm-version" aria-label="版本">v22.2</div>
 
 <div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
   <div class="cm-modal-card cm-disclaimer-card">
@@ -373,7 +373,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=22.0-design"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=22.2"></script>
 
 <script>
 (function(){
