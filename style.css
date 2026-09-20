@@ -88,3 +88,12 @@
   .cm-span-2{grid-column:1/-1}
   .cm-newcase-card{padding:14px}
 }
+
+/* v23 — clear split between case management and work management */
+.cm-workspace-home{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}
+.cm-workspace-home .cm-data-block{grid-column:1/-1}
+.cm-feature-card{border:1px solid rgba(139,101,68,.18);background:#fffdf9;border-radius:22px;padding:22px;text-align:left;display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;box-shadow:0 8px 24px rgba(86,63,43,.06);cursor:pointer}
+.cm-feature-card:hover{transform:translateY(-1px)}.cm-feature-icon{font-size:25px}.cm-feature-card strong{display:block;font-size:18px;margin-bottom:5px}.cm-feature-card small{display:block;color:#7e746b;line-height:1.5}.cm-feature-card b{font-size:26px;font-weight:400}
+.cm-feature-page{margin-top:14px}.cm-subpage-head{display:flex;gap:16px;align-items:center;margin-bottom:14px}.cm-subpage-head h3{margin:0}.cm-subpage-head p{margin:4px 0 0;color:#7e746b}.cm-back-workspace{border:0;background:transparent;color:#765b46;font-weight:700;padding:8px 0;cursor:pointer}
+.cm-case-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.cm-case-toolbar>input{flex:1;min-width:180px}.cm-list-head{display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px}
+@media(max-width:700px){.cm-workspace-home{grid-template-columns:1fr}.cm-feature-card{padding:18px}.cm-case-toolbar>*{width:100%}.cm-subpage-head{align-items:flex-start;flex-direction:column;gap:4px}}

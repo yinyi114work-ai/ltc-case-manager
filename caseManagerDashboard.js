@@ -45,7 +45,7 @@
   function activeNow(c){return c.status!=='closed';}
   function migrateCase(c){
     if(!c||typeof c!=='object')return c;
-    c.cms=c.cms||'';c.identity=c.identity||'';c.intakeStatus=c.intakeStatus||'';c.planStatus=c.planStatus||'';
+    c.cms=c.cms||'';c.identity=c.identity||'';c.caseType=c.caseType||'general';c.dischargeDate=c.dischargeDate||'';c.prevPhoneMonth=c.prevPhoneMonth||'';c.intakeStatus=c.intakeStatus||'';c.planStatus=c.planStatus||'';
     c.assessmentDate=c.assessmentDate||'';c.aa01Date=c.aa01Date||'';
     c.respite=c.respite||{startMonth:'',endMonth:'',balance:''};
     c.disability=c.disability||{type:'none',expiryDate:''};
@@ -83,7 +83,9 @@
     let through='9999-12';
     if(beforeMonth) through=addMonths(beforeMonth,-1);
     const last=latestHomeMonth(c,through);
-    return last?addMonths(last,6):c.openDate?.slice(0,7)||'';
+    if(last)return addMonths(last,6);
+    if(c.caseType==='discharge'&&c.dischargeDate)return addMonths(c.dischargeDate.slice(0,7),4);
+    return c.openDate?.slice(0,7)||'';
   }
   function expectedVisitType(c,m){
     const existing=getVisit(c.id,m);
@@ -135,9 +137,9 @@
     list.sort((a,b)=>rankCase(a)-rankCase(b)||a.name.localeCompare(b.name,'zh-Hant'));
     if(!list.length){el.innerHTML='<div class="cm-empty">尚無符合的個案。</div>';return;}
     el.innerHTML=`<div class="cm-table-wrap"><table class="cm-table cm-case-table"><thead><tr><th>個案</th><th>CMS</th><th>收案狀況</th><th>計畫進度</th><th>下次家訪</th><th>提醒</th><th>狀態</th><th>操作</th></tr></thead><tbody>${list.map(c=>{
-      const last=latestHomeMonth(c),next=last?addMonths(last,6):(c.openDate?.slice(0,7)||'');
+      const last=latestHomeMonth(c),next=nextHomeMonth(c);
       const alerts=caseAlerts(c), top=alerts[0];
-      return `<tr data-case="${c.id}" class="${activeNow(c)?'':'cm-closed'}"><td><button class="cm-case-open" data-action="openCase"><strong>${esc(c.name)}</strong><small>${esc(c.identity||'')}</small></button></td><td>${c.cms?`CMS ${esc(c.cms)}`:'—'}</td><td>${esc(c.intakeStatus||'—')}</td><td>${esc(c.planStatus||'—')}</td><td>${next?monthLabel(next):'—'}</td><td>${top?`<span class="cm-alert-chip ${top.level}">${esc(top.text)}</span>${alerts.length>1?` <small>+${alerts.length-1}</small>`:''}`:'<span class="cm-muted">—</span>'}</td><td>${activeNow(c)?'<span class="cm-badge active">在案</span>':`<span class="cm-badge closed">已結案</span>`}</td><td class="cm-actions">${activeNow(c)?`<button class="secondary cm-small-btn" data-action="closeCase">結案</button>`:`<button class="secondary cm-small-btn" data-action="restoreCase">恢復在案</button>`}<button class="cm-link danger" data-action="deleteCase">刪除</button></td></tr>`;
+      return `<tr data-case="${c.id}" class="${activeNow(c)?'':'cm-closed'}"><td><button class="cm-case-open" data-action="openCase"><strong>${esc(c.name)}</strong><small>${esc(c.identity||'')} · ${c.caseType==='discharge'?'出備案':c.caseType==='transfer'?'轉案':'一般新案'}</small></button></td><td>${c.cms?`CMS ${esc(c.cms)}`:'—'}</td><td>${esc(c.intakeStatus||'—')}</td><td>${esc(c.planStatus||'—')}</td><td>${next?monthLabel(next):'—'}</td><td>${top?`<span class="cm-alert-chip ${top.level}">${esc(top.text)}</span>${alerts.length>1?` <small>+${alerts.length-1}</small>`:''}`:'<span class="cm-muted">—</span>'}</td><td>${activeNow(c)?'<span class="cm-badge active">在案</span>':`<span class="cm-badge closed">已結案</span>`}</td><td class="cm-actions">${activeNow(c)?`<button class="secondary cm-small-btn" data-action="closeCase">結案</button>`:`<button class="secondary cm-small-btn" data-action="restoreCase">恢復在案</button>`}<button class="cm-link danger" data-action="deleteCase">刪除</button></td></tr>`;
     }).join('')}</tbody></table></div>`;
   }
 
@@ -347,6 +349,9 @@
     state.cases.push(migrateCase({
       id:uid('case'),name,cms:document.getElementById('cmCaseCms').value,
       identity:document.getElementById('cmCaseIdentity').value,
+      caseType:document.getElementById('cmCaseType').value,
+      dischargeDate:document.getElementById('cmDischargeDate').value,
+      prevPhoneMonth:document.getElementById('cmPrevPhoneMonth').value,
       openDate,prevHomeMonth,
       intakeStatus:document.getElementById('cmCaseIntake').value.trim(),
       planStatus:document.getElementById('cmCasePlan').value.trim(),
@@ -373,8 +378,9 @@
     editingCaseId=c.id;migrateCase(c);
     document.getElementById('cmCaseDetailTitle').textContent=c.name;
     document.getElementById('cmCaseDetailMeta').innerHTML=`${c.cms?`<span>CMS ${esc(c.cms)}</span>`:''}<span>${activeNow(c)?'在案':'已結案'}</span><span>開案 ${esc(c.openDate||'—')}</span>`;
-    const map={cmEditCms:c.cms,cmEditIdentity:c.identity,cmEditIntake:c.intakeStatus,cmEditPlan:c.planStatus,cmEditAssessment:c.assessmentDate,cmEditAA01:c.aa01Date,cmEditRespiteStart:c.respite.startMonth,cmEditRespiteEnd:c.respite.endMonth,cmEditRespiteBalance:c.respite.balance,cmEditDisabilityType:c.disability.type,cmEditDisabilityExpiry:c.disability.expiryDate,cmEditCaseNote:c.note};
+    const map={cmEditName:c.name,cmEditCms:c.cms,cmEditIdentity:c.identity,cmEditCaseType:c.caseType,cmEditOpenDate:c.openDate,cmEditDischargeDate:c.dischargeDate,cmEditPrevHomeMonth:c.prevHomeMonth,cmEditPrevPhoneMonth:c.prevPhoneMonth,cmEditIntake:c.intakeStatus,cmEditPlan:c.planStatus,cmEditAssessment:c.assessmentDate,cmEditAA01:c.aa01Date,cmEditRespiteStart:c.respite.startMonth,cmEditRespiteEnd:c.respite.endMonth,cmEditRespiteBalance:c.respite.balance,cmEditDisabilityType:c.disability.type,cmEditDisabilityExpiry:c.disability.expiryDate,cmEditCaseNote:c.note};
     Object.entries(map).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v??'';});
+    document.getElementById('cmEditDischargeWrap').hidden=c.caseType!=='discharge';
     renderCaseDetailLists(c);renderCaseAlerts(c);document.getElementById('cmCaseDetailModal').classList.add('show');
   }
   function renderCaseAlerts(c){const a=caseAlerts(c),el=document.getElementById('cmCaseAlerts');el.innerHTML=a.length?a.map(x=>`<span class="cm-alert-chip ${x.level}">${esc(x.text)}</span>`).join(''):'<span class="cm-ok-note">目前沒有由期限產生的提醒</span>';}
@@ -384,7 +390,7 @@
   }
   async function saveCaseDetail(){
     const c=state.cases.find(x=>x.id===editingCaseId);if(!c)return;
-    c.cms=document.getElementById('cmEditCms').value;c.identity=document.getElementById('cmEditIdentity').value;c.intakeStatus=document.getElementById('cmEditIntake').value.trim();c.planStatus=document.getElementById('cmEditPlan').value.trim();c.assessmentDate=document.getElementById('cmEditAssessment').value;c.aa01Date=document.getElementById('cmEditAA01').value;c.respite={startMonth:document.getElementById('cmEditRespiteStart').value,endMonth:document.getElementById('cmEditRespiteEnd').value,balance:document.getElementById('cmEditRespiteBalance').value};c.disability={type:document.getElementById('cmEditDisabilityType').value,expiryDate:document.getElementById('cmEditDisabilityExpiry').value};c.note=document.getElementById('cmEditCaseNote').value.trim();c.updatedAt=new Date().toISOString();
+    c.name=document.getElementById('cmEditName').value.trim()||c.name;c.cms=document.getElementById('cmEditCms').value;c.identity=document.getElementById('cmEditIdentity').value;c.caseType=document.getElementById('cmEditCaseType').value;c.openDate=document.getElementById('cmEditOpenDate').value;c.dischargeDate=document.getElementById('cmEditDischargeDate').value;c.prevHomeMonth=document.getElementById('cmEditPrevHomeMonth').value;c.prevPhoneMonth=document.getElementById('cmEditPrevPhoneMonth').value;c.intakeStatus=document.getElementById('cmEditIntake').value.trim();c.planStatus=document.getElementById('cmEditPlan').value.trim();c.assessmentDate=document.getElementById('cmEditAssessment').value;c.aa01Date=document.getElementById('cmEditAA01').value;c.respite={startMonth:document.getElementById('cmEditRespiteStart').value,endMonth:document.getElementById('cmEditRespiteEnd').value,balance:document.getElementById('cmEditRespiteBalance').value};c.disability={type:document.getElementById('cmEditDisabilityType').value,expiryDate:document.getElementById('cmEditDisabilityExpiry').value};c.note=document.getElementById('cmEditCaseNote').value.trim();c.updatedAt=new Date().toISOString();
     document.getElementById('cmCaseDetailModal').classList.remove('show');await save();
   }
   function addProfessional(){const c=state.cases.find(x=>x.id===editingCaseId);if(!c)return;const code=prompt('專業服務碼別／類型（可留空）')||'';const goal=prompt('服務目標（建議填寫，方便辨識是否曾做過類似服務）');if(goal===null)return;const startDate=prompt('開始日期 YYYY-MM-DD（可留空）')||'';const endDate=prompt('預計結束／期限 YYYY-MM-DD（可留空）')||'';c.professionalServices.push({id:uid('pro'),code,goal,startDate,endDate,status:'active',createdAt:new Date().toISOString()});renderCaseDetailLists(c);}
@@ -873,6 +879,16 @@ function captureNotionSession(){
   }
 
   function bind(){
+    const workspaceHome=document.getElementById('cmWorkspaceHome'),casesPage=document.getElementById('cmCasesPage'),workPage=document.getElementById('cmWorkPage');
+    const showWorkspacePage=(page='home')=>{workspaceHome.hidden=page!=='home';casesPage.hidden=page!=='cases';workPage.hidden=page!=='work';if(page==='cases')renderCaseList();if(page==='work')renderAll();};
+    document.querySelectorAll('[data-cm-open-page]').forEach(btn=>btn.onclick=()=>showWorkspacePage(btn.dataset.cmOpenPage));
+    document.querySelectorAll('.cm-back-workspace').forEach(btn=>btn.onclick=()=>showWorkspacePage('home'));
+    document.getElementById('cmOpenNewCase').onclick=()=>{document.getElementById('cmNewCasePanel').hidden=false;document.getElementById('cmCaseName').focus();};
+    document.getElementById('cmCloseNewCase').onclick=()=>document.getElementById('cmNewCasePanel').hidden=true;
+    const toggleDischarge=()=>document.getElementById('cmDischargeDateWrap').hidden=document.getElementById('cmCaseType').value!=='discharge';
+    document.getElementById('cmCaseType').onchange=toggleDischarge;toggleDischarge();
+    document.getElementById('cmEditCaseType').onchange=()=>document.getElementById('cmEditDischargeWrap').hidden=document.getElementById('cmEditCaseType').value!=='discharge';
+
     const tab=document.querySelector('.tab[data-target="casework"]');
     tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
     document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};

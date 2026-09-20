@@ -200,92 +200,46 @@
 </section>
 
 <section id="casework" class="section cm-workspace">
-  <div class="cm-heading-row">
-    <div><h2>個管工作台</h2><p class="lead">首頁看重點，個案、追蹤與行事曆分開處理；資料仍優先保存在目前瀏覽器。</p></div>
-    <button id="cmPrivacyOpen" class="secondary" type="button">資料與隱私說明</button>
-  </div>
+  <div class="cm-heading-row"><div><h2>個管工作台</h2><p class="lead">個案資料與每日工作分開管理。</p></div><button id="cmPrivacyOpen" class="secondary" type="button">資料與隱私說明</button></div>
   <div id="cmStorageError" class="cm-storage-error">目前瀏覽器無法使用本機資料庫，請確認不是無痕模式或受限制的瀏覽環境。</div>
-<div class="cm-view active" data-cm-panel="home">
-    <div id="cmReminder" class="cm-reminder"></div>
-    <div class="panel cm-monthbar">
-      <label>檢視月份<input id="cmMonth" type="month"></label>
-      <button id="cmMonthToday" class="secondary" type="button">回到本月</button>
-      <div class="cm-monthbar-spacer"></div>
-      <button id="cmNotify" class="secondary" type="button">開啟待辦提醒</button>
-    </div>
-    <div id="cmStats" class="cm-stats"></div>
-    <div class="cm-home-grid">
-      <section class="panel cm-block">
-        <div class="cm-block-title"><div><h3>今天先看這裡</h3><p>逾期、今日與本月未完成事項會集中提醒。</p></div></div>
-        <div id="cmHomeFocus" class="cm-focus-list"></div>
-      </section>
 
-    </div>
-    <section id="cmData" class="panel cm-block cm-data-block">
-      <div class="cm-block-title"><div><h3>資料與備份</h3><p>本機資料仍是目前主要資料來源；換裝置或清除網站資料前請先備份。</p></div></div>
-      <div class="cm-data-actions"><button id="cmExport" class="primary" type="button">匯出完整備份</button><label class="secondary cm-file-label">匯入備份<input id="cmImport" type="file" accept="application/json"></label><button id="cmClear" class="secondary danger-outline" type="button">清除本機資料</button></div>
-      <div class="cm-local-note"><strong>目前採本機優先。</strong>個案、家電訪、追蹤與行事曆先保存在瀏覽器 IndexedDB；Notion 同步尚未啟用，不會因按下授權就上傳既有資料。</div>
-    </section>
+  <div id="cmWorkspaceHome" class="cm-workspace-home">
+    <button class="cm-feature-card" type="button" data-cm-open-page="cases"><span class="cm-feature-icon">👤</span><span><strong>個案管理</strong><small>個案資料、評估與計畫、訪視、喘息、專業服務、身障與輔具</small></span><b>›</b></button>
+    <button class="cm-feature-card" type="button" data-cm-open-page="work"><span class="cm-feature-icon">✓</span><span><strong>工作管理</strong><small>今日工作、待辦事項、提醒、行事曆、異常事件與資源連結</small></span><b>›</b></button>
+    <section id="cmData" class="panel cm-block cm-data-block"><div class="cm-block-title"><div><h3>資料與備份</h3><p>換裝置或清除網站資料前，建議保留完整備份。</p></div></div><div class="cm-data-actions"><button id="cmExport" class="primary" type="button">匯出完整備份</button><label class="secondary cm-file-label">匯入備份<input id="cmImport" type="file" accept="application/json"></label><button id="cmClear" class="secondary danger-outline" type="button">清除本機資料</button></div></section>
   </div>
 
-  <div class="cm-view active" data-cm-panel="cases">
+  <div id="cmCasesPage" class="cm-feature-page" hidden>
+    <div class="cm-subpage-head"><button class="cm-back-workspace" type="button">‹ 返回工作台</button><div><h3>個案管理</h3><p>先看個案總表；需要時再進入個案工作頁修改。</p></div></div>
     <section id="cmCases" class="panel cm-block">
-      <div class="cm-block-title"><div><h3>個案</h3><p>個案是工作台的核心；期限、訪視與追蹤提醒由這裡的資料自動帶出。</p></div><div class="cm-title-actions"><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div></div>
+      <div class="cm-case-toolbar"><input id="cmCaseSearch" placeholder="搜尋個案"><button id="cmOpenNewCase" class="primary" type="button">＋ 新增個案</button><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div>
       <div class="cm-notion-strip"><div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span><strong> Notion</strong><small id="cmNotionDetail">連結後可同步到自己的 Notion 工作空間。</small></div><div class="cm-notion-actions"><button id="cmNotionConnect" class="secondary" type="button">連結 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="cm-link" type="button" hidden>中斷連結</button></div><div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div></div>
-      <div class="cm-newcase-card">
-        <div class="cm-newcase-title"><strong>新增個案</strong><small>先建立主要資料；專業服務與輔具可建立個案後持續追加。</small></div>
-        <div class="cm-form-grid cm-case-form">
-          <label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label>
-          <label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label>
-          <label>身分別<select id="cmCaseIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label>
-          <label>開案日期<input id="cmOpenDate" type="date"></label>
-          <label>收案狀況<select id="cmCaseIntake">
-<option value="">未填</option>
-<option>新案待處理</option><option>已聯繫</option><option>已完成家訪</option>
-<option>計畫處理中</option><option>服務銜接中</option><option>已完成收案</option>
-</select></label>
-          <label>計畫進度<select id="cmCasePlan">
-<option value="">未填</option>
-<option>待擬照顧計畫</option><option>計畫撰寫中</option><option>待送審</option>
-<option>送審中</option><option>退回修改</option><option>已完成</option>
-</select></label>
-          <label>最近照專評估日<input id="cmCaseAssessment" type="date"></label>
-          <label>AA01 日期<input id="cmCaseAA01" type="date"></label>
-          <label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label>
-          <label>喘息起始月份<input id="cmCaseRespiteStart" type="month"></label>
-          <label>喘息截止月份<input id="cmCaseRespiteEnd" type="month"></label>
-          <label>喘息剩餘額度<input id="cmCaseRespiteBalance" type="number" min="0" step="1" placeholder="例：18450"></label>
-          <label>身障證明<select id="cmCaseDisabilityType"><option value="none">無</option><option value="permanent">永久</option><option value="dated">有期限</option></select></label>
-          <label>身障證明到期日<input id="cmCaseDisabilityExpiry" type="date"></label>
-          <label class="cm-span-2">個案備註<textarea id="cmCaseNote" rows="2" placeholder="重要資訊可先記在這裡"></textarea></label>
-          <button id="cmAddCase" class="primary cm-span-2" type="button">＋加入個案</button>
-        </div>
-      </div>
-      <div class="cm-list-tools"><input id="cmCaseSearch" placeholder="搜尋個案名"><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案個案</label></div><div id="cmCaseList"></div>
-    </section>
-    <section id="cmVisits" class="panel cm-block">
-      <div class="cm-block-title"><div><h3>每月家／電訪</h3><p>家訪與電訪採互斥勾選；完成家訪後，系統會重新推算下一次應家訪月份。</p></div></div>
-      <div id="cmVisitSummary" class="cm-visit-summary"></div>
-      <div id="cmVisitFilters" class="cm-filter-row"><button class="secondary active" data-filter="all">全部</button><button class="secondary" data-filter="pending">未完成</button><button class="secondary" data-filter="home">應家訪</button><button class="secondary" data-filter="phone">應電訪</button><button class="secondary" data-filter="done">已完成</button></div><div id="cmVisitTable"></div>
+      <div id="cmNewCasePanel" class="cm-newcase-card" hidden><div class="cm-newcase-title"><strong>新增個案</strong><button id="cmCloseNewCase" class="cm-link" type="button">收起</button></div><div class="cm-form-grid cm-case-form">
+        <label>個案名／代稱<input id="cmCaseName"></label><label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label>
+        <label>身分別<select id="cmCaseIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label><label>案別<select id="cmCaseType"><option value="general">一般新案</option><option value="transfer">轉案</option><option value="discharge">出備案</option></select></label>
+        <label>開案日期<input id="cmOpenDate" type="date"></label><label id="cmDischargeDateWrap" hidden>出院日期<input id="cmDischargeDate" type="date"></label>
+        <label>收案狀況<select id="cmCaseIntake"><option value="">未填</option><option>新案待處理</option><option>已聯繫</option><option>已完成家訪</option><option>計畫處理中</option><option>服務銜接中</option><option>已完成收案</option></select></label>
+        <label>計畫進度<select id="cmCasePlan"><option value="">未填</option><option>待擬照顧計畫</option><option>計畫撰寫中</option><option>待送審</option><option>送審中</option><option>退回修改</option><option>已完成</option></select></label>
+        <label>最近照專評估日<input id="cmCaseAssessment" type="date"></label><label>AA01 日期<input id="cmCaseAA01" type="date"></label>
+        <label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label><label>前次電訪月份<input id="cmPrevPhoneMonth" type="month"></label>
+        <label>喘息起始月份<input id="cmCaseRespiteStart" type="month"></label><label>喘息截止月份<input id="cmCaseRespiteEnd" type="month"></label><label>喘息剩餘額度<input id="cmCaseRespiteBalance" type="number" min="0" step="1"></label>
+        <label>身障證明<select id="cmCaseDisabilityType"><option value="none">無</option><option value="permanent">永久</option><option value="dated">有期限</option></select></label><label>身障證明到期日<input id="cmCaseDisabilityExpiry" type="date"></label>
+        <label class="cm-span-2">個案備註<textarea id="cmCaseNote" rows="2"></textarea></label><button id="cmAddCase" class="primary cm-span-2" type="button">建立個案</button>
+      </div></div>
+      <div class="cm-list-head"><strong>個案總表</strong><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案</label></div><div id="cmCaseList"></div>
     </section>
   </div>
 
-  <div class="cm-view" data-cm-panel="tracking">
-    <section id="cmTodos" class="panel cm-block">
-      <div class="cm-block-title"><div><h3>追蹤</h3><p>一般任務、異常事件與資源連結集中在同一頁，不再分散成多個頁籤。</p></div></div>
-      <div class="cm-todo-form"><label>追蹤事項<input id="cmTodoTitle" placeholder="例：追蹤輔具核定函"></label><label>日期<input id="cmTodoDate" type="date"></label><label>類型<select id="cmTodoType"><option value="general">一般任務</option><option value="incident">異常事件</option><option value="resource">資源連結</option></select></label><label>優先度<select id="cmTodoPriority"><option value="high">重要</option><option value="normal" selected>一般</option><option value="low">稍後</option></select></label><label>備註<input id="cmTodoNote" placeholder="可留空"></label><button id="cmAddTodo" class="primary" type="button">加入追蹤</button></div>
-      <div class="cm-track-legend"><span>一般任務</span><span>異常事件</span><span>資源連結</span></div><div id="cmTodoList" class="cm-todo-list"></div>
-    </section>
-  </div>
-
-  <div class="cm-view" data-cm-panel="calendar">
-    <section id="cmCalendarSection" class="panel cm-block">
-      <div class="cm-block-title"><div><h3>行事曆</h3><p>顯示追蹤事項與已安排家訪；安排家訪不等於完成。</p></div><button id="cmScheduleHomeVisit" class="primary" type="button">＋ 安排家訪</button></div>
-      <div id="cmCalendar"></div>
-    </section>
+  <div id="cmWorkPage" class="cm-feature-page" hidden>
+    <div class="cm-subpage-head"><button class="cm-back-workspace" type="button">‹ 返回工作台</button><div><h3>工作管理</h3><p>待辦、提醒與行事曆集中處理。</p></div></div>
+    <div id="cmReminder" class="cm-reminder"></div><div class="panel cm-monthbar"><label>檢視月份<input id="cmMonth" type="month"></label><button id="cmMonthToday" class="secondary" type="button">回到本月</button><div class="cm-monthbar-spacer"></div><button id="cmNotify" class="secondary" type="button">開啟待辦提醒</button></div><div id="cmStats" class="cm-stats"></div>
+    <section class="panel cm-block"><div class="cm-block-title"><div><h3>今日工作</h3><p>逾期、今日與近期事項集中在這裡。</p></div></div><div id="cmHomeFocus" class="cm-focus-list"></div></section>
+    <section id="cmVisits" class="panel cm-block"><div class="cm-block-title"><div><h3>訪視管理</h3><p>查看本月家訪與電訪完成狀況。</p></div></div><div id="cmVisitSummary" class="cm-visit-summary"></div><div id="cmVisitFilters" class="cm-filter-row"><button class="secondary active" data-filter="all">全部</button><button class="secondary" data-filter="pending">未完成</button><button class="secondary" data-filter="home">應家訪</button><button class="secondary" data-filter="phone">應電訪</button><button class="secondary" data-filter="done">已完成</button></div><div id="cmVisitTable"></div></section>
+    <section id="cmTodos" class="panel cm-block"><div class="cm-block-title"><div><h3>待辦與持續追蹤</h3><p>一般任務、異常事件與資源連結集中管理。</p></div></div><div class="cm-todo-form"><label>追蹤事項<input id="cmTodoTitle"></label><label>日期<input id="cmTodoDate" type="date"></label><label>類型<select id="cmTodoType"><option value="general">一般任務</option><option value="incident">異常事件</option><option value="resource">資源連結</option></select></label><label>優先度<select id="cmTodoPriority"><option value="high">重要</option><option value="normal" selected>一般</option><option value="low">稍後</option></select></label><label>備註<input id="cmTodoNote"></label><button id="cmAddTodo" class="primary" type="button">加入追蹤</button></div><div class="cm-track-legend"><span>一般任務</span><span>異常事件</span><span>資源連結</span></div><div id="cmTodoList" class="cm-todo-list"></div></section>
+    <section id="cmCalendarSection" class="panel cm-block"><div class="cm-block-title"><div><h3>行事曆</h3><p>顯示追蹤事項與已安排家訪。</p></div><button id="cmScheduleHomeVisit" class="primary" type="button">＋ 安排家訪</button></div><div id="cmCalendar"></div></section>
   </div>
 </section>
-<div class="cm-version" aria-label="版本">v22.3</div>
+<div class="cm-version" aria-label="版本">v23.0</div>
 
 <div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
   <div class="cm-modal-card cm-disclaimer-card">
@@ -335,7 +289,14 @@
     <div class="cm-detail-head"><div><span class="cm-detail-kicker">個案工作頁</span><h3 id="cmCaseDetailTitle">個案</h3><div id="cmCaseDetailMeta" class="cm-detail-meta"></div></div><button id="cmCaseDetailClose" class="secondary" type="button">關閉</button></div>
     <div id="cmCaseAlerts" class="cm-case-alerts"></div>
     <div class="cm-detail-sections">
-      <section><h4>基本與計畫</h4><div class="cm-detail-grid"><label>CMS<select id="cmEditCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label><label>身分別<select id="cmEditIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label><label>收案狀況<input id="cmEditIntake" placeholder="例：出備新案"></label><label>計畫進度<input id="cmEditPlan" placeholder="例：待擬照顧計畫"></label><label>最近照專評估日<input id="cmEditAssessment" type="date"></label><label>AA01 日期<input id="cmEditAA01" type="date"></label></div></section>
+      <section><h4>個案概況與計畫</h4><div class="cm-detail-grid">
+<label>個案名／代稱<input id="cmEditName"></label><label>CMS<select id="cmEditCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label>
+<label>身分別<select id="cmEditIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label><label>案別<select id="cmEditCaseType"><option value="general">一般新案</option><option value="transfer">轉案</option><option value="discharge">出備案</option></select></label>
+<label>開案日期<input id="cmEditOpenDate" type="date"></label><label id="cmEditDischargeWrap">出院日期<input id="cmEditDischargeDate" type="date"></label>
+<label>收案狀況<select id="cmEditIntake"><option value="">未填</option><option>新案待處理</option><option>已聯繫</option><option>已完成家訪</option><option>計畫處理中</option><option>服務銜接中</option><option>已完成收案</option></select></label>
+<label>計畫進度<select id="cmEditPlan"><option value="">未填</option><option>待擬照顧計畫</option><option>計畫撰寫中</option><option>待送審</option><option>送審中</option><option>退回修改</option><option>已完成</option></select></label>
+<label>最近照專評估日<input id="cmEditAssessment" type="date"></label><label>AA01 日期<input id="cmEditAA01" type="date"></label><label>前次家訪月份<input id="cmEditPrevHomeMonth" type="month"></label><label>前次電訪月份<input id="cmEditPrevPhoneMonth" type="month"></label>
+</div></section>
       <section><h4>喘息額度</h4><div class="cm-detail-grid"><label>起始月份<input id="cmEditRespiteStart" type="month"></label><label>截止月份<input id="cmEditRespiteEnd" type="month"></label><label>剩餘額度<input id="cmEditRespiteBalance" type="number" min="0" step="1" placeholder="例：18450"></label></div></section>
       <section><h4>身障證明</h4><div class="cm-detail-grid"><label>證明狀態<select id="cmEditDisabilityType"><option value="none">無</option><option value="permanent">永久</option><option value="dated">有期限</option></select></label><label>到期日<input id="cmEditDisabilityExpiry" type="date"></label></div><p class="cm-legal-note">有期限者，系統會在到期前 6 個月列入提醒。</p></section>
       <section><div class="cm-section-title"><h4>專業服務</h4><button id="cmAddProfessional" class="secondary cm-small-btn" type="button">＋新增</button></div><div id="cmProfessionalList"></div></section>
@@ -373,7 +334,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=22.3"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=23.0"></script>
 
 <script>
 (function(){
