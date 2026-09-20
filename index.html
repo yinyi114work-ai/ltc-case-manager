@@ -226,20 +226,44 @@
         <label>身障證明<select id="cmCaseDisabilityType"><option value="none">無</option><option value="permanent">永久</option><option value="dated">有期限</option></select></label><label>身障證明到期日<input id="cmCaseDisabilityExpiry" type="date"></label>
         <label class="cm-span-2">個案備註<textarea id="cmCaseNote" rows="2"></textarea></label><button id="cmAddCase" class="primary cm-span-2" type="button">建立個案</button>
       </div></div>
+      <section class="cm-case-overview">
+        <div class="cm-block-title"><div><h3>個案工作概況</h3><p>在案量、新案與本月訪視狀況集中在個案管理。</p></div></div>
+        <div id="cmStats" class="cm-stats"></div>
+      </section>
+      <section id="cmVisits" class="cm-case-visits">
+        <div class="cm-block-title"><div><h3>訪視管理</h3><p>查看本月家訪與電訪完成狀況。</p></div></div>
+        <div class="panel cm-monthbar"><label>檢視月份<input id="cmMonth" type="month"></label><button id="cmMonthToday" class="secondary" type="button">回到本月</button></div>
+        <div id="cmVisitSummary" class="cm-visit-summary"></div>
+        <div id="cmVisitFilters" class="cm-filter-row"><button class="secondary active" data-filter="all">全部</button><button class="secondary" data-filter="pending">未完成</button><button class="secondary" data-filter="home">應家訪</button><button class="secondary" data-filter="phone">應電訪</button><button class="secondary" data-filter="done">已完成</button></div>
+        <div id="cmVisitTable"></div>
+      </section>
       <div class="cm-list-head"><strong>個案總表</strong><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案</label></div><div id="cmCaseList"></div>
     </section>
   </div>
 
   <div id="cmWorkPage" class="cm-feature-page" hidden>
-    <div class="cm-subpage-head"><button class="cm-back-workspace" type="button">‹ 返回工作台</button><div><h3>工作管理</h3><p>待辦、提醒與行事曆集中處理。</p></div></div>
-    <div id="cmReminder" class="cm-reminder"></div><div class="panel cm-monthbar"><label>檢視月份<input id="cmMonth" type="month"></label><button id="cmMonthToday" class="secondary" type="button">回到本月</button><div class="cm-monthbar-spacer"></div><button id="cmNotify" class="secondary" type="button">開啟待辦提醒</button></div><div id="cmStats" class="cm-stats"></div>
-    <section class="panel cm-block"><div class="cm-block-title"><div><h3>今日工作</h3><p>逾期、今日與近期事項集中在這裡。</p></div></div><div id="cmHomeFocus" class="cm-focus-list"></div></section>
-    <section id="cmVisits" class="panel cm-block"><div class="cm-block-title"><div><h3>訪視管理</h3><p>查看本月家訪與電訪完成狀況。</p></div></div><div id="cmVisitSummary" class="cm-visit-summary"></div><div id="cmVisitFilters" class="cm-filter-row"><button class="secondary active" data-filter="all">全部</button><button class="secondary" data-filter="pending">未完成</button><button class="secondary" data-filter="home">應家訪</button><button class="secondary" data-filter="phone">應電訪</button><button class="secondary" data-filter="done">已完成</button></div><div id="cmVisitTable"></div></section>
-    <section id="cmTodos" class="panel cm-block"><div class="cm-block-title"><div><h3>待辦與持續追蹤</h3><p>一般任務、異常事件與資源連結集中管理。</p></div></div><div class="cm-todo-form"><label>追蹤事項<input id="cmTodoTitle"></label><label>日期<input id="cmTodoDate" type="date"></label><label>類型<select id="cmTodoType"><option value="general">一般任務</option><option value="incident">異常事件</option><option value="resource">資源連結</option></select></label><label>優先度<select id="cmTodoPriority"><option value="high">重要</option><option value="normal" selected>一般</option><option value="low">稍後</option></select></label><label>備註<input id="cmTodoNote"></label><button id="cmAddTodo" class="primary" type="button">加入追蹤</button></div><div class="cm-track-legend"><span>一般任務</span><span>異常事件</span><span>資源連結</span></div><div id="cmTodoList" class="cm-todo-list"></div></section>
-    <section id="cmCalendarSection" class="panel cm-block"><div class="cm-block-title"><div><h3>行事曆</h3><p>顯示追蹤事項與已安排家訪。</p></div><button id="cmScheduleHomeVisit" class="primary" type="button">＋ 安排家訪</button></div><div id="cmCalendar"></div></section>
+    <div class="cm-subpage-head"><button class="cm-back-workspace" type="button">‹ 返回工作台</button><div><h3>工作管理</h3><p>先看待辦，再新增工作，最後安排到行事曆。</p></div></div>
+
+    <section class="panel cm-block">
+      <div class="cm-block-title"><div><h3>待辦事項</h3><p>一進來先掌握目前還有多少事情需要處理。</p></div><button id="cmNotify" class="secondary" type="button">開啟待辦提醒</button></div>
+      <div id="cmTodoStats" class="cm-todo-stats"></div>
+      <div id="cmReminder" class="cm-reminder"></div>
+      <div id="cmHomeFocus" class="cm-focus-list"></div>
+      <div id="cmTodoList" class="cm-todo-list"></div>
+    </section>
+
+    <section id="cmTodos" class="panel cm-block">
+      <div class="cm-block-title"><div><h3>新增待辦</h3><p>新增一般任務、異常事件或資源連結追蹤。</p></div></div>
+      <div class="cm-todo-form"><label>追蹤事項<input id="cmTodoTitle" placeholder="例：追蹤輔具核定函"></label><label>日期<input id="cmTodoDate" type="date"></label><label>類型<select id="cmTodoType"><option value="general">一般任務</option><option value="incident">異常事件</option><option value="resource">資源連結</option></select></label><label>優先度<select id="cmTodoPriority"><option value="high">重要</option><option value="normal" selected>一般</option><option value="low">稍後</option></select></label><label>備註<input id="cmTodoNote" placeholder="可留空"></label><button id="cmAddTodo" class="primary" type="button">＋ 新增待辦</button></div>
+    </section>
+
+    <section id="cmCalendarSection" class="panel cm-block">
+      <div class="cm-block-title"><div><h3>行事曆</h3><p>查看待辦與已安排事項。</p></div><button id="cmScheduleHomeVisit" class="primary" type="button">＋ 安排家訪</button></div>
+      <div id="cmCalendar"></div>
+    </section>
   </div>
 </section>
-<div class="cm-version" aria-label="版本">v23.0</div>
+<div class="cm-version" aria-label="版本">v23.1</div>
 
 <div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
   <div class="cm-modal-card cm-disclaimer-card">
@@ -334,7 +358,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=23.0"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=23.1"></script>
 
 <script>
 (function(){

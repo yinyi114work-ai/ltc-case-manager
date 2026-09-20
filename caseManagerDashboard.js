@@ -167,6 +167,14 @@
     }).join('')}</tbody></table></div>`;
   }
 
+  function renderTodoStats(){
+    const el=document.getElementById('cmTodoStats');if(!el)return;
+    const pending=(state.todos||[]).filter(t=>!t.done);
+    const overdue=pending.filter(t=>t.date&&t.date<todayISO).length;
+    const today=pending.filter(t=>t.date===todayISO).length;
+    const upcoming=pending.filter(t=>t.date&&t.date>todayISO).length;
+    el.innerHTML=`<div><span>待處理</span><strong>${pending.length}</strong></div><div><span>已逾期</span><strong>${overdue}</strong></div><div><span>今天</span><strong>${today}</strong></div><div><span>之後</span><strong>${upcoming}</strong></div>`;
+  }
   function renderTodos(){
     const el=document.getElementById('cmTodoList');
     const list=state.todos.filter(t=>t.date.slice(0,7)===selectedMonth).sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date));
@@ -217,7 +225,7 @@
   function renderAll(){
     document.getElementById('cmMonth').value=selectedMonth;
     renderStats();renderCaseList();renderVisits();renderTodos();renderCalendar();renderReminder();
-  }
+  renderTodoStats();}
 
 
   function downloadCaseTemplate(){
