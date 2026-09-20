@@ -6,13 +6,6 @@
   const STORE = 'workspace';
   const STATE_KEY = 'main';
   const DISCLAIMER_KEY = 'longcareNotes.caseDashboard.disclaimer.v1';
-  const NOTION_CONNECTOR = 'https://longcare-notion-connector.yinyi114work.workers.dev';
-  const NOTION_SESSION_KEY = 'longcareNotes.notion.session.v1';
-  let notionSession = '';
-  let notionConnected = false;
-  let notionWorkspace = '';
-  let notionSyncTimer = null;
-  let notionSyncing = false;
   const pad = n => String(n).padStart(2, '0');
   const now = new Date();
   const todayISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
@@ -31,7 +24,7 @@
   }
 
   function defaultState(){
-    return {version:2,cases:[],visits:[],todos:[],homeVisits:[],settings:{notificationEnabled:false}};
+    return {version:3,cases:[],visits:[],todos:[],homeVisits:[],settings:{notificationEnabled:false}};
   }
   function uid(prefix){return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;}
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
@@ -43,6 +36,26 @@
   function caseActiveDuringMonth(c,m){const start=monthStart(m),end=monthEnd(m);return c.openDate<=end && (!c.closedDate || c.closedDate>=start);}
   function caseActiveAtEnd(c,m){return c.openDate<=monthEnd(m) && (!c.closedDate || c.closedDate>monthEnd(m));}
   function activeNow(c){return c.status!=='closed';}
+  function migrateCase(c){
+    if(!c||typeof c!=='object')return c;
+    c.cms=c.cms||'';c.identity=c.identity||'';c.intakeStatus=c.intakeStatus||'';c.planStatus=c.planStatus||'';
+    c.assessmentDate=c.assessmentDate||'';c.aa01Date=c.aa01Date||'';
+    c.respite=c.respite||{startMonth:'',endMonth:'',balance:''};
+    c.disability=c.disability||{type:'none',expiryDate:''};
+    c.professionalServices=Array.isArray(c.professionalServices)?c.professionalServices:[];
+    c.assistiveDevices=Array.isArray(c.assistiveDevices)?c.assistiveDevices:[];
+    c.note=c.note||'';c.updatedAt=c.updatedAt||c.createdAt||new Date().toISOString();
+    return c;
+  }
+  function daysUntil(date){if(!date)return null;const a=new Date(todayISO+'T00:00:00'),b=new Date(date+'T00:00:00');return Math.ceil((b-a)/86400000);}
+  function caseAlerts(c){
+    const out=[];
+    if(c.disability?.type==='dated'&&c.disability.expiryDate){const d=daysUntil(c.disability.expiryDate);if(d!==null&&d<=183)out.push({level:d<0?'red':d<=30?'orange':'yellow',text:d<0?`身障證明已逾期 ${Math.abs(d)} 天`:`身障證明 ${d} 天後到期`});}
+    if(c.respite?.endMonth){const d=daysUntil(monthEnd(c.respite.endMonth));if(d!==null&&d<=60)out.push({level:d<0?'red':d<=30?'orange':'yellow',text:d<0?'喘息額度區間已到期':`喘息額度區間剩 ${d} 天`});}
+    (c.professionalServices||[]).forEach(x=>{if(x.endDate){const d=daysUntil(x.endDate);if(d!==null&&d<=30)out.push({level:d<0?'red':'orange',text:`專業服務${x.code?' '+x.code:''}${d<0?' 已到期':` ${d} 天後到期`}`});}});
+    (c.assistiveDevices||[]).forEach(x=>{if(x.approvalExpiry){const d=daysUntil(x.approvalExpiry);if(d!==null&&d<=60)out.push({level:d<0?'red':d<=30?'orange':'yellow',text:`${x.name||x.code||'輔具'}核定函${d<0?'已逾期':`剩 ${d} 天`}`});}});
+    return out;
+  }
   function getVisit(caseId,m){return state.visits.find(v=>v.caseId===caseId&&v.month===m)||null;}
   function visitsForCase(caseId){return state.visits.filter(v=>v.caseId===caseId);}
   function homeVisitsForDate(date){return (state.homeVisits||[]).filter(v=>v.date===date);}
@@ -83,126 +96,7 @@
   }
   function dbGet(){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly');const r=tx.objectStore(STORE).get(STATE_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
   function dbPut(){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(state,STATE_KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
-  async function save(){await dbPut();renderAll();scheduleNotionSync();}
-
-  function notionHeaders(){
-    return notionSession ? {'Authorization':`Bearer ${notionSession}`,'Content-Type':'application/json'} : {'Content-Type':'application/json'};
-  }
-  function setNotionMessage(message='',error=false){
-    const el=document.getElementById('cmNotionMessage');if(!el)return;
-    el.textContent=message;el.classList.toggle('show',!!message);el.classList.toggle('error',!!error);
-  }
-  function renderNotionStatus(syncing=false){
-    const status=document.getElementById('cmNotionStatus'),connect=document.getElementById('cmNotionConnect'),sync=document.getElementById('cmNotionSync'),disconnect=document.getElementById('cmNotionDisconnect'),detail=document.getElementById('cmNotionDetail');
-    if(!status)return;
-    status.className='cm-notion-status'+(syncing?' syncing':notionConnected?' connected':'');
-    status.textContent=syncing?'同步中…':notionConnected?'已連結':'尚未連結';
-    connect.hidden=notionConnected;sync.hidden=!notionConnected;disconnect.hidden=!notionConnected;
-    if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}工作台變更會自動同步，也可手動立即同步。`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
-  }
-  function updateSyncDiagnostic(text){
-  const el=document.getElementById('cmDiagSync');
-  if(el)el.textContent='同步寫入：'+text;
-}
-function updateNotionDiagnostics(apiText){
-  const raw=(location.search||'')+' '+(location.hash||'');
-  const stored=localStorage.getItem(NOTION_SESSION_KEY)||'';
-  const a=document.getElementById('cmDiagUrl'),b=document.getElementById('cmDiagLocal'),c=document.getElementById('cmDiagApi');
-  if(a)a.textContent='OAuth session（目前網址）：'+(/notion_session=/.test(raw)?'已收到':'網址已清理／目前沒有');
-  if(b)b.textContent='本機 session：'+(stored?'已儲存（'+stored.length+' 字元）':'未儲存');
-  if(c&&apiText)c.textContent='Connector status：'+apiText;
-}
-function captureNotionSession(){
-    const query=new URLSearchParams(location.search);
-    const rawHash=location.hash.replace(/^#/,'');
-    const hashParams=new URLSearchParams(rawHash.includes('=')?rawHash:'');
-    const sid=query.get('notion_session')||hashParams.get('notion_session')||'';
-    if(!sid){
-      notionSession=localStorage.getItem(NOTION_SESSION_KEY)||'';
-      return !!notionSession;
-    }
-    localStorage.setItem(NOTION_SESSION_KEY,sid);
-    notionSession=sid;
-    query.delete('notion_session');
-    hashParams.delete('notion_session');
-    const cleanQuery=query.toString();
-    history.replaceState(null,'',location.pathname+(cleanQuery?`?${cleanQuery}`:'')+'#casework');
-    return true;
-  }
-  async function checkNotionStatus(){
-    notionSession=localStorage.getItem(NOTION_SESSION_KEY)||'';
-    if(!notionSession){notionConnected=false;renderNotionStatus();updateNotionDiagnostics('未送出（本機沒有 session）');return false;}
-    try{
-      const r=await fetch(`${NOTION_CONNECTOR}/api/notion/status`,{headers:notionHeaders(),credentials:'omit'});
-      const data=await r.json();
-      notionConnected=!!data.connected;notionWorkspace=data.workspaceName||data.workspace_name||'';
-      renderNotionStatus();
-      updateNotionDiagnostics('HTTP '+r.status+' / connected='+String(!!data.connected));
-      if(!notionConnected&&notionSession)setNotionMessage('已收到 Notion 授權資訊，但 Connector 尚未確認連線；請重新整理一次。',true);
-      return notionConnected;
-    }catch(e){notionConnected=false;renderNotionStatus();updateNotionDiagnostics('API 錯誤：'+(e?.message||String(e)));setNotionMessage('目前無法確認 Notion 連線狀態，本機資料仍可正常使用。',true);return false;}
-  }
-  function connectNotion(){
-    const returnTo=encodeURIComponent(location.origin+location.pathname+'#casework');
-    location.href=`${NOTION_CONNECTOR}/auth/notion/start?return_to=${returnTo}`;
-  }
-  function remoteStateFrom(data){
-    const candidate=data?.state?.data||data?.state||data?.data?.data||data?.data||null;
-    return candidate&&Array.isArray(candidate.cases)&&Array.isArray(candidate.visits)&&Array.isArray(candidate.todos)?candidate:null;
-  }
-  async function pullNotionState(){
-    if(!notionConnected)return false;
-    try{
-      renderNotionStatus(true);setNotionMessage('正在讀取 Notion 同步資料…');
-      const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{headers:notionHeaders(),credentials:'omit'});
-      if(r.status===404){renderNotionStatus();setNotionMessage('Notion 尚無工作台資料，將以目前本機資料建立第一份同步。');await pushNotionState(true);return true;}
-      const data=await r.json();if(!r.ok)throw new Error(data?.error||`HTTP ${r.status}`);
-      const remote=remoteStateFrom(data);
-      if(remote){state=Object.assign(defaultState(),remote);if(!Array.isArray(state.homeVisits))state.homeVisits=[];await dbPut();renderAll();setNotionMessage('已從 Notion 載入最新工作台資料。');}
-      else{setNotionMessage('Notion 尚無工作台資料，將以目前本機資料建立第一份同步。');await pushNotionState(true);}
-      renderNotionStatus();return true;
-    }catch(e){console.error(e);renderNotionStatus();setNotionMessage('讀取 Notion 資料失敗，本機資料未受影響。',true);return false;}
-  }
-  async function pushNotionState(silent=false){
-    if(!notionSession){updateSyncDiagnostic('未送出（本機沒有 session）');if(!silent)setNotionMessage('尚未連結 Notion。',true);return false;}
-    renderNotionStatus(true);
-    updateSyncDiagnostic('送出中…');
-    try{
-      const payload={state:state};
-      const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{method:'PUT',headers:notionHeaders(),body:JSON.stringify(payload),credentials:'omit'});
-      const raw=await r.text();
-      let data={};
-      try{data=raw?JSON.parse(raw):{};}catch{data={message:raw||'非 JSON 回應'};}
-      if(!r.ok){
-        const detail=data.message||data.error||`HTTP ${r.status}`;
-        updateSyncDiagnostic(`HTTP ${r.status} / ${detail}`);
-        throw new Error(detail);
-      }
-      const syncedAt=data.savedAt||new Date().toISOString();
-      if(typeof NOTION_LAST_SYNC_KEY!=='undefined'){
-        localStorage.setItem(NOTION_LAST_SYNC_KEY,syncedAt);
-      }
-      updateSyncDiagnostic(`HTTP ${r.status} / 寫入成功`);
-      renderNotionStatus();
-      if(!silent)setNotionMessage('Notion 同步完成。');
-      return true;
-    }catch(e){
-      renderNotionStatus();
-      if(!/HTTP \d+/.test(document.getElementById('cmDiagSync')?.textContent||''))updateSyncDiagnostic('網路/API 錯誤：'+(e?.message||String(e)));
-      if(!silent)setNotionMessage('Notion 同步失敗；資料已保留在本機，可稍後再按「立即同步」。',true);
-      return false;
-    }
-  }
-
-  function scheduleNotionSync(){
-    if(!notionConnected)return;clearTimeout(notionSyncTimer);notionSyncTimer=setTimeout(()=>pushNotionState(true),900);
-  }
-  async function disconnectNotion(){
-    if(!confirm('確定中斷這台裝置與 Notion 的連結嗎？本機資料不會被刪除。'))return;
-    try{await fetch(`${NOTION_CONNECTOR}/api/notion/disconnect`,{method:'POST',headers:notionHeaders(),credentials:'omit'});}catch(e){}
-    localStorage.removeItem(NOTION_SESSION_KEY);notionSession='';notionConnected=false;notionWorkspace='';renderNotionStatus();setNotionMessage('已中斷 Notion 連結；目前改回本機模式。');
-  }
-
+  async function save(){await dbPut();renderAll();}
 
   function showDisclaimer(){
     if(localStorage.getItem(DISCLAIMER_KEY)==='accepted')return;
@@ -230,26 +124,13 @@ function captureNotionSession(){
     const q=(document.getElementById('cmCaseSearch')?.value||'').trim().toLowerCase();
     const showClosed=document.getElementById('cmShowClosed')?.checked;
     let list=state.cases.filter(c=>(showClosed||activeNow(c))&&(!q||c.name.toLowerCase().includes(q)));
-    // 個案名單排序：本月應家訪且尚未完成 → 其他尚未完成 → 已完成 → 已結案。
-    // 「本月應訪」在這裡專指依家訪週期，本月應安排家訪的個案。
-    const rankCase=c=>{
-      if(!caseActiveDuringMonth(c,selectedMonth)) return activeNow(c)?3:4;
-      const done=completion(c,selectedMonth);
-      const homeDue=expectedVisitType(c,selectedMonth)==='home';
-      if(homeDue&&!done) return 0;
-      if(!done) return 1;
-      return 2;
-    };
+    const rankCase=c=>{const alerts=caseAlerts(c);if(alerts.some(a=>a.level==='red'))return 0;if(alerts.length)return 1;if(!caseActiveDuringMonth(c,selectedMonth))return activeNow(c)?3:4;return completion(c,selectedMonth)?3:2;};
     list.sort((a,b)=>rankCase(a)-rankCase(b)||a.name.localeCompare(b.name,'zh-Hant'));
     if(!list.length){el.innerHTML='<div class="cm-empty">尚無符合的個案。</div>';return;}
-    el.innerHTML=`<div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>個案名</th><th>開案日</th><th>前次家訪</th><th>下次應家訪</th><th>狀態</th><th>操作</th></tr></thead><tbody>${list.map(c=>{
-      const last=latestHomeMonth(c);
-      const next=last?addMonths(last,6):(c.openDate?.slice(0,7)||'');
-      const activeInMonth=caseActiveDuringMonth(c,selectedMonth);
-      const homeDue=activeInMonth&&expectedVisitType(c,selectedMonth)==='home';
-      const done=activeInMonth&&completion(c,selectedMonth);
-      const dueBadge=homeDue?` <span class="cm-badge home">本月應訪${done?'・已完成':''}</span>`:'';
-      return `<tr data-case="${c.id}" class="${activeNow(c)?'':'cm-closed'}"><td><strong>${esc(c.name)}</strong>${dueBadge}</td><td>${esc(c.openDate)}</td><td>${last?monthLabel(last):'—'}</td><td>${next?monthLabel(next):'—'}</td><td>${activeNow(c)?'<span class="cm-badge active">在案</span>':`<span class="cm-badge closed">已結案</span><div class="cm-small">${esc(c.closedDate||'')}</div>`}</td><td class="cm-actions">${activeNow(c)?`<button class="secondary cm-small-btn" data-action="closeCase">結案</button>`:`<button class="secondary cm-small-btn" data-action="restoreCase">恢復在案</button>`}<button class="cm-link danger" data-action="deleteCase">刪除</button></td></tr>`;
+    el.innerHTML=`<div class="cm-table-wrap"><table class="cm-table cm-case-table"><thead><tr><th>個案</th><th>CMS</th><th>收案狀況</th><th>計畫進度</th><th>下次家訪</th><th>提醒</th><th>狀態</th><th>操作</th></tr></thead><tbody>${list.map(c=>{
+      const last=latestHomeMonth(c),next=last?addMonths(last,6):(c.openDate?.slice(0,7)||'');
+      const alerts=caseAlerts(c), top=alerts[0];
+      return `<tr data-case="${c.id}" class="${activeNow(c)?'':'cm-closed'}"><td><button class="cm-case-open" data-action="openCase"><strong>${esc(c.name)}</strong><small>${esc(c.identity||'')}</small></button></td><td>${c.cms?`CMS ${esc(c.cms)}`:'—'}</td><td>${esc(c.intakeStatus||'—')}</td><td>${esc(c.planStatus||'—')}</td><td>${next?monthLabel(next):'—'}</td><td>${top?`<span class="cm-alert-chip ${top.level}">${esc(top.text)}</span>${alerts.length>1?` <small>+${alerts.length-1}</small>`:''}`:'<span class="cm-muted">—</span>'}</td><td>${activeNow(c)?'<span class="cm-badge active">在案</span>':`<span class="cm-badge closed">已結案</span>`}</td><td class="cm-actions">${activeNow(c)?`<button class="secondary cm-small-btn" data-action="closeCase">結案</button>`:`<button class="secondary cm-small-btn" data-action="restoreCase">恢復在案</button>`}<button class="cm-link danger" data-action="deleteCase">刪除</button></td></tr>`;
     }).join('')}</tbody></table></div>`;
   }
 
@@ -282,8 +163,7 @@ function captureNotionSession(){
     const list=state.todos.filter(t=>t.date.slice(0,7)===selectedMonth).sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date));
     if(!list.length){el.innerHTML='<div class="cm-empty">這個月還沒有待辦事項。</div>';return;}
     const p={high:'重要',normal:'一般',low:'稍後'};
-    const types={general:'一般任務',incident:'異常事件',resource:'資源連結'};
-    el.innerHTML=list.map(t=>{const type=t.type||'general';return `<div class="cm-todo ${t.done?'done':''}" data-todo="${t.id}"><label class="cm-todo-check"><input type="checkbox" data-action="toggleTodo" ${t.done?'checked':''}><span></span></label><div class="cm-todo-main"><strong>${esc(t.title)}</strong><div class="cm-small">${esc(t.date)}　<span class="cm-type ${type}">${types[type]||'一般任務'}</span>　<span class="cm-priority ${t.priority}">${p[t.priority]||'一般'}</span>${t.note?`　${esc(t.note)}`:''}</div></div><button class="cm-link danger" data-action="deleteTodo">刪除</button></div>`}).join('');
+    el.innerHTML=list.map(t=>`<div class="cm-todo ${t.done?'done':''}" data-todo="${t.id}"><label class="cm-todo-check"><input type="checkbox" data-action="toggleTodo" ${t.done?'checked':''}><span></span></label><div class="cm-todo-main"><strong>${esc(t.title)}</strong><div class="cm-small">${esc(t.date)}　<span class="cm-priority ${t.priority}">${p[t.priority]||'一般'}</span>${t.note?`　${esc(t.note)}`:''}</div></div><button class="cm-link danger" data-action="deleteTodo">刪除</button></div>`).join('');
   }
 
   function calendarCells(m){const [y,mo]=m.split('-').map(Number);const first=new Date(y,mo-1,1);const start=new Date(first);start.setDate(1-first.getDay());return Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});}
@@ -325,20 +205,9 @@ function captureNotionSession(){
     if(parts.length){el.innerHTML=`<strong>今日提醒：</strong>${parts.join('｜')}`;el.classList.add('show');}else{el.classList.remove('show');}
   }
 
-  function renderHomeFocus(){
-    const el=document.getElementById('cmHomeFocus');if(!el)return;
-    const overdue=state.todos.filter(t=>!t.done&&t.date<todayISO).length;
-    const today=state.todos.filter(t=>!t.done&&t.date===todayISO).length;
-    const monthCases=state.cases.filter(c=>caseActiveDuringMonth(c,currentMonth));
-    const pending=monthCases.filter(c=>!completion(c,currentMonth)).length;
-    const homeToday=(state.homeVisits||[]).filter(v=>v.date===todayISO).length;
-    const rows=[['逾期追蹤',overdue,'需要優先處理'],['今天追蹤',today,'今天到期'],['本月家／電訪未完成',pending,'依目前月份計算'],['今天已安排家訪',homeToday,'行事曆安排']];
-    el.innerHTML=rows.map(([label,count,note])=>`<div class="cm-focus-item"><div><strong>${label}</strong><small>${note}</small></div><b>${count}</b></div>`).join('');
-  }
-
   function renderAll(){
     document.getElementById('cmMonth').value=selectedMonth;
-    renderStats();renderCaseList();renderVisits();renderTodos();renderCalendar();renderReminder();renderHomeFocus();
+    renderStats();renderCaseList();renderVisits();renderTodos();renderCalendar();renderReminder();
   }
 
 
@@ -468,10 +337,31 @@ function captureNotionSession(){
     const openDate=document.getElementById('cmOpenDate').value;
     const prevHomeMonth=document.getElementById('cmPrevHomeMonth').value;
     if(!name||!openDate)return alert('請至少填寫個案名與開案日期。');
-    state.cases.push({id:uid('case'),name,openDate,prevHomeMonth,status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()});cmTrack('case_added');
+    state.cases.push(migrateCase({id:uid('case'),name,cms:document.getElementById('cmCaseCms').value,openDate,prevHomeMonth,status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()}));cmTrack('case_added');
     document.getElementById('cmCaseName').value='';document.getElementById('cmPrevHomeMonth').value='';
     await save();
   }
+  let editingCaseId='';
+  function openCaseDetail(c){
+    editingCaseId=c.id;migrateCase(c);
+    document.getElementById('cmCaseDetailTitle').textContent=c.name;
+    document.getElementById('cmCaseDetailMeta').innerHTML=`${c.cms?`<span>CMS ${esc(c.cms)}</span>`:''}<span>${activeNow(c)?'在案':'已結案'}</span><span>開案 ${esc(c.openDate||'—')}</span>`;
+    const map={cmEditCms:c.cms,cmEditIdentity:c.identity,cmEditIntake:c.intakeStatus,cmEditPlan:c.planStatus,cmEditAssessment:c.assessmentDate,cmEditAA01:c.aa01Date,cmEditRespiteStart:c.respite.startMonth,cmEditRespiteEnd:c.respite.endMonth,cmEditRespiteBalance:c.respite.balance,cmEditDisabilityType:c.disability.type,cmEditDisabilityExpiry:c.disability.expiryDate,cmEditCaseNote:c.note};
+    Object.entries(map).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v??'';});
+    renderCaseDetailLists(c);renderCaseAlerts(c);document.getElementById('cmCaseDetailModal').classList.add('show');
+  }
+  function renderCaseAlerts(c){const a=caseAlerts(c),el=document.getElementById('cmCaseAlerts');el.innerHTML=a.length?a.map(x=>`<span class="cm-alert-chip ${x.level}">${esc(x.text)}</span>`).join(''):'<span class="cm-ok-note">目前沒有由期限產生的提醒</span>';}
+  function renderCaseDetailLists(c){
+    document.getElementById('cmProfessionalList').innerHTML=(c.professionalServices||[]).length?(c.professionalServices||[]).map((x,i)=>`<div class="cm-repeat-row"><div><strong>${esc(x.code||'專業服務')}</strong><span>${esc(x.goal||'未填目標')}</span><small>${esc(x.startDate||'—')} ～ ${esc(x.endDate||'—')}</small></div><button class="cm-link danger" data-pro-delete="${i}" type="button">刪除</button></div>`).join(''):'<div class="cm-empty-mini">尚無專業服務紀錄</div>';
+    document.getElementById('cmAssistiveList').innerHTML=(c.assistiveDevices||[]).length?(c.assistiveDevices||[]).map((x,i)=>`<div class="cm-repeat-row"><div><strong>${esc(x.code||'')}${x.code?'｜':''}${esc(x.name||'輔具')}</strong><span>${x.useYears?`最低使用年限 ${esc(x.useYears)} 年`:'使用年限待依碼別帶入'}</span><small>核定 ${esc(x.approvalDate||'—')}｜效期 ${esc(x.approvalExpiry||'—')}</small></div><button class="cm-link danger" data-aid-delete="${i}" type="button">刪除</button></div>`).join(''):'<div class="cm-empty-mini">尚無輔具紀錄</div>';
+  }
+  async function saveCaseDetail(){
+    const c=state.cases.find(x=>x.id===editingCaseId);if(!c)return;
+    c.cms=document.getElementById('cmEditCms').value;c.identity=document.getElementById('cmEditIdentity').value;c.intakeStatus=document.getElementById('cmEditIntake').value.trim();c.planStatus=document.getElementById('cmEditPlan').value.trim();c.assessmentDate=document.getElementById('cmEditAssessment').value;c.aa01Date=document.getElementById('cmEditAA01').value;c.respite={startMonth:document.getElementById('cmEditRespiteStart').value,endMonth:document.getElementById('cmEditRespiteEnd').value,balance:document.getElementById('cmEditRespiteBalance').value};c.disability={type:document.getElementById('cmEditDisabilityType').value,expiryDate:document.getElementById('cmEditDisabilityExpiry').value};c.note=document.getElementById('cmEditCaseNote').value.trim();c.updatedAt=new Date().toISOString();
+    document.getElementById('cmCaseDetailModal').classList.remove('show');await save();
+  }
+  function addProfessional(){const c=state.cases.find(x=>x.id===editingCaseId);if(!c)return;const code=prompt('專業服務碼別／類型（可留空）')||'';const goal=prompt('服務目標（建議填寫，方便辨識是否曾做過類似服務）');if(goal===null)return;const startDate=prompt('開始日期 YYYY-MM-DD（可留空）')||'';const endDate=prompt('預計結束／期限 YYYY-MM-DD（可留空）')||'';c.professionalServices.push({id:uid('pro'),code,goal,startDate,endDate,status:'active',createdAt:new Date().toISOString()});renderCaseDetailLists(c);}
+  function addAssistive(){const c=state.cases.find(x=>x.id===editingCaseId);if(!c)return;const code=prompt('輔具碼別（例：EA01，可留空）')||'';const name=prompt('輔具品項');if(!name)return;const approvalDate=prompt('核定／公文日期 YYYY-MM-DD（可留空）')||'';let approvalExpiry='';if(approvalDate){const d=new Date(approvalDate+'T00:00:00');d.setMonth(d.getMonth()+6);approvalExpiry=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}c.assistiveDevices.push({id:uid('aid'),code,name,approvalDate,approvalExpiry,useYears:'',acquiredDate:'',createdAt:new Date().toISOString()});renderCaseDetailLists(c);renderCaseAlerts(c);}
   async function closeCase(c){
     document.getElementById('cmCloseCaseName').textContent=c.name;
     document.getElementById('cmCloseDate').value=todayISO;
@@ -493,7 +383,7 @@ function captureNotionSession(){
   }
   async function addTodo(){
     const title=document.getElementById('cmTodoTitle').value.trim();if(!title)return alert('請輸入待辦事項。');
-    state.todos.push({id:uid('todo'),title,date:document.getElementById('cmTodoDate').value||todayISO,type:document.getElementById('cmTodoType')?.value||'general',priority:document.getElementById('cmTodoPriority').value,note:document.getElementById('cmTodoNote').value.trim(),done:false});cmTrack('todo_added');
+    state.todos.push({id:uid('todo'),title,date:document.getElementById('cmTodoDate').value||todayISO,priority:document.getElementById('cmTodoPriority').value,note:document.getElementById('cmTodoNote').value.trim(),done:false});cmTrack('todo_added');
     document.getElementById('cmTodoTitle').value='';document.getElementById('cmTodoNote').value='';await save();
   }
 
@@ -517,22 +407,10 @@ function captureNotionSession(){
     const key=`cmNotify_${todayISO}`;if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');new Notification('Longcare.Notes 今日提醒',{body:`你有 ${due.length} 件今日或逾期待辦。`});
   }
 
-  function switchView(name){
-    document.querySelectorAll('.cm-appnav [data-cm-view]').forEach(b=>b.classList.toggle('active',b.dataset.cmView===name));
-    document.querySelectorAll('.cm-view[data-cm-panel]').forEach(p=>p.classList.toggle('active',p.dataset.cmPanel===name));
-    cmTrack('casework_view',{view:name});
-  }
-
   function bind(){
-    document.querySelector('.cm-appnav')?.addEventListener('click',e=>{const b=e.target.closest('[data-cm-view]');if(b)switchView(b.dataset.cmView);});
     const tab=document.querySelector('.tab[data-target="casework"]');
-    tab?.addEventListener('click',()=>{cmTrack('casework_open');setTimeout(()=>{renderAll();maybeNotify();},0);});
-    const disclaimerAgree=document.getElementById('cmDisclaimerAgree');
-    const disclaimerAccept=document.getElementById('cmDisclaimerAccept');
-    if(disclaimerAgree&&disclaimerAccept){
-      disclaimerAgree.onchange=()=>{disclaimerAccept.disabled=!disclaimerAgree.checked;};
-      disclaimerAccept.onclick=()=>{if(!disclaimerAgree.checked)return;localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
-    }
+    tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
+    document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
     document.getElementById('cmDisclaimerClose').onclick=hideDisclaimer;
     document.getElementById('cmPrivacyOpen').onclick=()=>document.getElementById('cmDisclaimer').classList.add('show');
     document.getElementById('cmMonth').onchange=e=>{selectedMonth=e.target.value||currentMonth;renderAll();};
@@ -540,8 +418,15 @@ function captureNotionSession(){
     document.getElementById('cmAddCase').onclick=addCase;
     document.getElementById('cmCaseSearch').oninput=renderCaseList;
     document.getElementById('cmShowClosed').onchange=renderCaseList;
-    document.getElementById('cmCaseList').onclick=async e=>{const tr=e.target.closest('[data-case]');if(!tr)return;const c=state.cases.find(x=>x.id===tr.dataset.case);if(!c)return;const action=e.target.dataset.action;if(action==='closeCase')closeCase(c);if(action==='restoreCase'){c.status='active';c.closedDate='';c.closeReason='';await save();}if(action==='deleteCase'&&confirm(`確定永久刪除「${c.name}」及其訪視紀錄嗎？`)){state.cases=state.cases.filter(x=>x.id!==c.id);state.visits=state.visits.filter(v=>v.caseId!==c.id);state.homeVisits=(state.homeVisits||[]).filter(v=>v.caseId!==c.id);await save();}};
+    document.getElementById('cmCaseList').onclick=async e=>{const tr=e.target.closest('[data-case]');if(!tr)return;const c=state.cases.find(x=>x.id===tr.dataset.case);if(!c)return;const action=e.target.closest('[data-action]')?.dataset.action;if(action==='openCase')openCaseDetail(c);if(action==='closeCase')closeCase(c);if(action==='restoreCase'){c.status='active';c.closedDate='';c.closeReason='';await save();}if(action==='deleteCase'&&confirm(`確定永久刪除「${c.name}」及其訪視紀錄嗎？`)){state.cases=state.cases.filter(x=>x.id!==c.id);state.visits=state.visits.filter(v=>v.caseId!==c.id);state.homeVisits=(state.homeVisits||[]).filter(v=>v.caseId!==c.id);await save();}};
     document.getElementById('cmCloseConfirm').onclick=confirmClose;
+    document.getElementById('cmCaseDetailClose').onclick=()=>document.getElementById('cmCaseDetailModal').classList.remove('show');
+    document.getElementById('cmCaseDetailCancel').onclick=()=>document.getElementById('cmCaseDetailModal').classList.remove('show');
+    document.getElementById('cmCaseDetailSave').onclick=saveCaseDetail;
+    document.getElementById('cmAddProfessional').onclick=addProfessional;
+    document.getElementById('cmAddAssistive').onclick=addAssistive;
+    document.getElementById('cmProfessionalList').onclick=e=>{const i=e.target.dataset.proDelete;if(i===undefined)return;const c=state.cases.find(x=>x.id===editingCaseId);c.professionalServices.splice(Number(i),1);renderCaseDetailLists(c);};
+    document.getElementById('cmAssistiveList').onclick=e=>{const i=e.target.dataset.aidDelete;if(i===undefined)return;const c=state.cases.find(x=>x.id===editingCaseId);c.assistiveDevices.splice(Number(i),1);renderCaseDetailLists(c);renderCaseAlerts(c);};
     document.getElementById('cmCloseCancel').onclick=()=>document.getElementById('cmCloseModal').classList.remove('show');
     document.getElementById('cmVisitFilters').onclick=e=>{if(!e.target.dataset.filter)return;visitFilter=e.target.dataset.filter;document.querySelectorAll('#cmVisitFilters button').forEach(b=>b.classList.toggle('active',b===e.target));renderVisits();};
     document.getElementById('cmVisitTable').onchange=e=>{if(!e.target.dataset.visit)return;const tr=e.target.closest('[data-case]');setVisit(tr.dataset.case,e.target.dataset.visit,e.target.checked);};
@@ -559,13 +444,10 @@ function captureNotionSession(){
     document.getElementById('cmImport').onchange=e=>{const f=e.target.files?.[0];if(f)importBackup(f);e.target.value='';};
     document.getElementById('cmClear').onclick=clearData;
     document.getElementById('cmNotify').onclick=enableNotifications;
-    document.getElementById('cmNotionConnect').onclick=connectNotion;
-    document.getElementById('cmNotionSync').onclick=()=>pushNotionState(false);
-    document.getElementById('cmNotionDisconnect').onclick=disconnectNotion;
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];const returnedFromNotion=captureNotionSession();updateNotionDiagnostics();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];state.cases=(state.cases||[]).map(migrateCase);bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();

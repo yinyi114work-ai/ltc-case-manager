@@ -227,18 +227,7 @@
         <div class="cm-block-title"><div><h3>今天先看這裡</h3><p>逾期、今日與本月未完成事項會集中提醒。</p></div></div>
         <div id="cmHomeFocus" class="cm-focus-list"></div>
       </section>
-      <section class="panel cm-block cm-notion-panel">
-        <div class="cm-block-title"><div><h3>Notion 同步</h3><p>選配功能。未連線時仍可完整使用本機模式。</p></div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span></div>
-        <p id="cmNotionDetail" class="cm-notion-detail">連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。</p>
-        <div class="cm-notion-actions"><button id="cmNotionConnect" class="primary" type="button">連結我的 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="secondary danger-outline" type="button" hidden>中斷連結</button></div>
-        <div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div>
-        <p class="cm-legal-note">授權會前往 Notion 官方頁面；Notion access token 不會存放在前端。</p>
-      <div id="cmNotionDiag" style="margin-top:14px;padding:12px 14px;border:1px dashed #cbb9a7;border-radius:12px;background:#fffaf4;font-size:13px;line-height:1.7;word-break:break-word">
-<strong>Notion 連線診斷</strong><br>
-<span id="cmDiagUrl">OAuth session：檢查中</span><br>
-<span id="cmDiagLocal">本機 session：檢查中</span><br>
-<span id="cmDiagApi">Connector status：尚未檢查</span><br><span id="cmDiagSync">同步寫入：尚未測試</span>
-</div></section>
+
     </div>
     <section id="cmData" class="panel cm-block cm-data-block">
       <div class="cm-block-title"><div><h3>資料與備份</h3><p>本機資料仍是目前主要資料來源；換裝置或清除網站資料前請先備份。</p></div></div>
@@ -249,8 +238,9 @@
 
   <div class="cm-view" data-cm-panel="cases">
     <section id="cmCases" class="panel cm-block">
-      <div class="cm-block-title"><div><h3>個案</h3><p>建立個案後，系統會依前次家訪月份推算下一次應家訪月份。</p></div><div class="cm-title-actions"><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div></div>
-      <div class="cm-form-grid cm-case-form"><label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label><label>開案日期<input id="cmOpenDate" type="date"></label><label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label><button id="cmAddCase" class="primary" type="button">＋加入個案</button></div>
+      <div class="cm-block-title"><div><h3>個案</h3><p>個案是工作台的核心；期限、訪視與追蹤提醒由這裡的資料自動帶出。</p></div><div class="cm-title-actions"><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div></div>
+      <div class="cm-notion-strip"><div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span><strong> Notion</strong><small id="cmNotionDetail">連結後可同步到自己的 Notion 工作空間。</small></div><div class="cm-notion-actions"><button id="cmNotionConnect" class="secondary" type="button">連結 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="cm-link" type="button" hidden>中斷連結</button></div><div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div></div>
+      <div class="cm-form-grid cm-case-form"><label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label><label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label><label>開案日期<input id="cmOpenDate" type="date"></label><label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label><button id="cmAddCase" class="primary" type="button">＋加入個案</button></div>
       <div class="cm-list-tools"><input id="cmCaseSearch" placeholder="搜尋個案名"><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案個案</label></div><div id="cmCaseList"></div>
     </section>
     <section id="cmVisits" class="panel cm-block">
@@ -320,6 +310,22 @@
   </div>
 </div>
 
+<div id="cmCaseDetailModal" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmCaseDetailTitle">
+  <div class="cm-modal-card cm-case-detail-card">
+    <div class="cm-detail-head"><div><span class="cm-detail-kicker">個案工作頁</span><h3 id="cmCaseDetailTitle">個案</h3><div id="cmCaseDetailMeta" class="cm-detail-meta"></div></div><button id="cmCaseDetailClose" class="secondary" type="button">關閉</button></div>
+    <div id="cmCaseAlerts" class="cm-case-alerts"></div>
+    <div class="cm-detail-sections">
+      <section><h4>基本與計畫</h4><div class="cm-detail-grid"><label>CMS<select id="cmEditCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label><label>身分別<select id="cmEditIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label><label>收案狀況<input id="cmEditIntake" placeholder="例：出備新案"></label><label>計畫進度<input id="cmEditPlan" placeholder="例：待擬照顧計畫"></label><label>最近照專評估日<input id="cmEditAssessment" type="date"></label><label>AA01 日期<input id="cmEditAA01" type="date"></label></div></section>
+      <section><h4>喘息額度</h4><div class="cm-detail-grid"><label>起始月份<input id="cmEditRespiteStart" type="month"></label><label>截止月份<input id="cmEditRespiteEnd" type="month"></label><label>剩餘額度<input id="cmEditRespiteBalance" type="number" min="0" step="1" placeholder="例：18450"></label></div></section>
+      <section><h4>身障證明</h4><div class="cm-detail-grid"><label>證明狀態<select id="cmEditDisabilityType"><option value="none">無</option><option value="permanent">永久</option><option value="dated">有期限</option></select></label><label>到期日<input id="cmEditDisabilityExpiry" type="date"></label></div><p class="cm-legal-note">有期限者，系統會在到期前 6 個月列入提醒。</p></section>
+      <section><div class="cm-section-title"><h4>專業服務</h4><button id="cmAddProfessional" class="secondary cm-small-btn" type="button">＋新增</button></div><div id="cmProfessionalList"></div></section>
+      <section><div class="cm-section-title"><h4>輔具</h4><button id="cmAddAssistive" class="secondary cm-small-btn" type="button">＋新增</button></div><div id="cmAssistiveList"></div><p class="cm-legal-note">使用年限將依現行給付辦法碼別規則帶入；核定函效期與輔具最低使用年限分開管理。</p></section>
+      <section><h4>備註</h4><textarea id="cmEditCaseNote" rows="3" placeholder="個案重要備註"></textarea></section>
+    </div>
+    <div class="cm-modal-actions"><button id="cmCaseDetailCancel" class="secondary" type="button">取消</button><button id="cmCaseDetailSave" class="primary" type="button">儲存個案資料</button></div>
+  </div>
+</div>
+
 <div id="cmCloseModal" class="cm-modal" role="dialog" aria-modal="true">
   <div class="cm-modal-card">
     <h3>個案結案</h3><p>個案：<strong id="cmCloseCaseName"></strong></p>
@@ -347,7 +353,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=21.9"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=22.0-design"></script>
 
 <script>
 (function(){
