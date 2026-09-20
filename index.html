@@ -240,7 +240,27 @@
     <section id="cmCases" class="panel cm-block">
       <div class="cm-block-title"><div><h3>個案</h3><p>個案是工作台的核心；期限、訪視與追蹤提醒由這裡的資料自動帶出。</p></div><div class="cm-title-actions"><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div></div>
       <div class="cm-notion-strip"><div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span><strong> Notion</strong><small id="cmNotionDetail">連結後可同步到自己的 Notion 工作空間。</small></div><div class="cm-notion-actions"><button id="cmNotionConnect" class="secondary" type="button">連結 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="cm-link" type="button" hidden>中斷連結</button></div><div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div></div>
-      <div class="cm-form-grid cm-case-form"><label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label><label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label><label>開案日期<input id="cmOpenDate" type="date"></label><label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label><button id="cmAddCase" class="primary" type="button">＋加入個案</button></div>
+      <div class="cm-newcase-card">
+        <div class="cm-newcase-title"><strong>新增個案</strong><small>先建立主要資料；專業服務與輔具可建立個案後持續追加。</small></div>
+        <div class="cm-form-grid cm-case-form">
+          <label>個案名／代稱<input id="cmCaseName" placeholder="例：王小明"></label>
+          <label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label>
+          <label>身分別<select id="cmCaseIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label>
+          <label>開案日期<input id="cmOpenDate" type="date"></label>
+          <label>收案狀況<input id="cmCaseIntake" placeholder="例：出備新案"></label>
+          <label>計畫進度<input id="cmCasePlan" placeholder="例：待擬照顧計畫"></label>
+          <label>最近照專評估日<input id="cmCaseAssessment" type="date"></label>
+          <label>AA01 日期<input id="cmCaseAA01" type="date"></label>
+          <label>前次家訪月份<input id="cmPrevHomeMonth" type="month"></label>
+          <label>喘息起始月份<input id="cmCaseRespiteStart" type="month"></label>
+          <label>喘息截止月份<input id="cmCaseRespiteEnd" type="month"></label>
+          <label>喘息剩餘額度<input id="cmCaseRespiteBalance" type="number" min="0" step="1" placeholder="例：18450"></label>
+          <label>身障證明<select id="cmCaseDisabilityType"><option value="none">無</option><option value="permanent">永久</option><option value="dated">有期限</option></select></label>
+          <label>身障證明到期日<input id="cmCaseDisabilityExpiry" type="date"></label>
+          <label class="cm-span-2">個案備註<textarea id="cmCaseNote" rows="2" placeholder="重要資訊可先記在這裡"></textarea></label>
+          <button id="cmAddCase" class="primary cm-span-2" type="button">＋加入個案</button>
+        </div>
+      </div>
       <div class="cm-list-tools"><input id="cmCaseSearch" placeholder="搜尋個案名"><label class="cm-inline-check"><input id="cmShowClosed" type="checkbox"> 顯示已結案個案</label></div><div id="cmCaseList"></div>
     </section>
     <section id="cmVisits" class="panel cm-block">
@@ -265,7 +285,7 @@
     </section>
   </div>
 </section>
-
+<div class="cm-version" aria-label="版本">v22.1</div>
 
 <div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
   <div class="cm-modal-card cm-disclaimer-card">

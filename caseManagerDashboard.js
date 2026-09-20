@@ -337,8 +337,28 @@
     const openDate=document.getElementById('cmOpenDate').value;
     const prevHomeMonth=document.getElementById('cmPrevHomeMonth').value;
     if(!name||!openDate)return alert('請至少填寫個案名與開案日期。');
-    state.cases.push(migrateCase({id:uid('case'),name,cms:document.getElementById('cmCaseCms').value,openDate,prevHomeMonth,status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()}));cmTrack('case_added');
-    document.getElementById('cmCaseName').value='';document.getElementById('cmPrevHomeMonth').value='';
+    state.cases.push(migrateCase({
+      id:uid('case'),name,cms:document.getElementById('cmCaseCms').value,
+      identity:document.getElementById('cmCaseIdentity').value,
+      openDate,prevHomeMonth,
+      intakeStatus:document.getElementById('cmCaseIntake').value.trim(),
+      planStatus:document.getElementById('cmCasePlan').value.trim(),
+      assessmentDate:document.getElementById('cmCaseAssessment').value,
+      aa01Date:document.getElementById('cmCaseAA01').value,
+      respite:{
+        startMonth:document.getElementById('cmCaseRespiteStart').value,
+        endMonth:document.getElementById('cmCaseRespiteEnd').value,
+        balance:document.getElementById('cmCaseRespiteBalance').value
+      },
+      disability:{
+        type:document.getElementById('cmCaseDisabilityType').value,
+        expiryDate:document.getElementById('cmCaseDisabilityExpiry').value
+      },
+      note:document.getElementById('cmCaseNote').value.trim(),
+      status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    }));cmTrack('case_added');
+    ['cmCaseName','cmPrevHomeMonth','cmCaseIntake','cmCasePlan','cmCaseAssessment','cmCaseAA01','cmCaseRespiteStart','cmCaseRespiteEnd','cmCaseRespiteBalance','cmCaseDisabilityExpiry','cmCaseNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('cmCaseCms').value='';document.getElementById('cmCaseIdentity').value='';document.getElementById('cmCaseDisabilityType').value='none';
     await save();
   }
   let editingCaseId='';
@@ -408,6 +428,17 @@
   }
 
   function bind(){
+    document.querySelectorAll('.cm-appnav [data-cm-view]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const view=btn.dataset.cmView;
+        document.querySelectorAll('.cm-appnav [data-cm-view]').forEach(b=>b.classList.toggle('active',b===btn));
+        document.querySelectorAll('.cm-view[data-cm-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.cmPanel===view));
+        cmTrack('casework_view',{view});
+        if(view==='cases')renderCaseList();
+        if(view==='tracking')renderTodos();
+        if(view==='calendar')renderCalendar();
+      });
+    });
     const tab=document.querySelector('.tab[data-target="casework"]');
     tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
     document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
