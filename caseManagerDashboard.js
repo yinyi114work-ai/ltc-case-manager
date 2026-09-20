@@ -873,7 +873,6 @@ function captureNotionSession(){
   }
 
   function bind(){
-    });
     const tab=document.querySelector('.tab[data-target="casework"]');
     tab?.addEventListener('click',()=>{cmTrack('casework_open');showDisclaimer();setTimeout(()=>{renderAll();maybeNotify();},0);});
     document.getElementById('cmDisclaimerAccept').onclick=()=>{localStorage.setItem(DISCLAIMER_KEY,'accepted');hideDisclaimer();};
@@ -916,7 +915,7 @@ function captureNotionSession(){
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];state.cases=(state.cases||[]).map(migrateCase);const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];state.cases=(state.cases||[]).map(migrateCase);const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();

@@ -228,7 +228,7 @@
     </section>
   </div>
 
-  <div class="cm-view" data-cm-panel="cases">
+  <div class="cm-view active" data-cm-panel="cases">
     <section id="cmCases" class="panel cm-block">
       <div class="cm-block-title"><div><h3>個案</h3><p>個案是工作台的核心；期限、訪視與追蹤提醒由這裡的資料自動帶出。</p></div><div class="cm-title-actions"><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div></div>
       <div class="cm-notion-strip"><div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span><strong> Notion</strong><small id="cmNotionDetail">連結後可同步到自己的 Notion 工作空間。</small></div><div class="cm-notion-actions"><button id="cmNotionConnect" class="secondary" type="button">連結 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="cm-link" type="button" hidden>中斷連結</button></div><div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div></div>
@@ -285,7 +285,7 @@
     </section>
   </div>
 </section>
-<div class="cm-version" aria-label="版本">v22.2</div>
+<div class="cm-version" aria-label="版本">v22.3</div>
 
 <div id="cmDisclaimer" class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="cmDisclaimerTitle">
   <div class="cm-modal-card cm-disclaimer-card">
@@ -373,7 +373,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=22.2"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=22.3"></script>
 
 <script>
 (function(){
