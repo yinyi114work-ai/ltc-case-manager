@@ -11,8 +11,11 @@
   let notionSession = '';
   let notionConnected = false;
   let notionWorkspace = '';
+  let notionPageId = '';
   let notionSyncTimer = null;
   let notionSyncing = false;
+  let syncBlocked = false;
+  let syncMeta = {revision:null,dirty:false,sequence:0};
   const pad = n => String(n).padStart(2, '0');
   const now = new Date();
   const todayISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
@@ -105,7 +108,13 @@
   }
   function dbGet(){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly');const r=tx.objectStore(STORE).get(STATE_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
   function dbPut(){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(state,STATE_KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
-  async function save(){await dbPut();renderAll();}
+  async function save(){
+    syncMeta.dirty=true;
+    syncMeta.sequence++;
+    // Persist the unsent marker together with the data in the same IndexedDB transaction.
+    state._sync=Object.assign({},syncMeta);
+    await dbPut();renderAll();renderNotionStatus();scheduleNotionSync();
+  }
 
   function showDisclaimer(){
     if(localStorage.getItem(DISCLAIMER_KEY)==='accepted')return;
@@ -456,12 +465,13 @@
     el.textContent=message;el.classList.toggle('show',!!message);el.classList.toggle('error',!!error);
   }
   function renderNotionStatus(syncing=false){
-    const status=document.getElementById('cmNotionStatus'),connect=document.getElementById('cmNotionConnect'),sync=document.getElementById('cmNotionSync'),disconnect=document.getElementById('cmNotionDisconnect'),detail=document.getElementById('cmNotionDetail');
+    const status=document.getElementById('cmNotionStatus'),connect=document.getElementById('cmNotionConnect'),sync=document.getElementById('cmNotionSync'),disconnect=document.getElementById('cmNotionDisconnect'),detail=document.getElementById('cmNotionDetail'),open=document.getElementById('cmNotionOpen');
     if(!status)return;
     status.className='cm-notion-status'+(syncing?' syncing':notionConnected?' connected':'');
-    status.textContent=syncing?'同步中…':notionConnected?'已連結':'尚未連結';
+    status.textContent=syncing?'同步中…':notionConnected?(syncMeta.dirty?'待同步':syncMeta.revision?'已存入 Notion':'已連結'):'尚未連結';
     connect.hidden=notionConnected;sync.hidden=!notionConnected;disconnect.hidden=!notionConnected;
-    if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}工作台變更會自動同步，也可手動立即同步。`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
+    if(open){open.hidden=!notionConnected||!notionPageId;if(notionPageId)open.href=`https://www.notion.so/${notionPageId.replace(/-/g,'')}`;}
+    if(detail)detail.textContent=notionConnected?`${notionWorkspace?`已連結「${notionWorkspace}」。`: 'Notion 已連結。'}${syncMeta.dirty?'資料已留在本機，正在等待同步。':syncMeta.revision?'工作台資料已同步，可在 Notion 表格閱讀。':'尚未建立同步資料。'}`:'連結後，工作台會透過長照研究室 Connector 將資料同步到你授權的 Notion 工作空間。';
   }
   function updateSyncDiagnostic(text){
   const el=document.getElementById('cmDiagSync');
@@ -518,20 +528,42 @@ function captureNotionSession(){
     try{
       renderNotionStatus(true);setNotionMessage('正在讀取 Notion 同步資料…');
       const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{headers:notionHeaders(),credentials:'omit'});
-      if(r.status===404){renderNotionStatus();setNotionMessage('Notion 尚無工作台資料，將以目前本機資料建立第一份同步。');await pushNotionState(true);return true;}
       const data=await r.json();if(!r.ok)throw new Error(data?.error||`HTTP ${r.status}`);
+      notionPageId=data.pageId||'';
       const remote=remoteStateFrom(data);
-      if(remote){state=Object.assign(defaultState(),remote);if(!Array.isArray(state.homeVisits))state.homeVisits=[];await dbPut();renderAll();setNotionMessage('已從 Notion 載入最新工作台資料。');}
-      else{setNotionMessage('Notion 尚無工作台資料，將以目前本機資料建立第一份同步。');await pushNotionState(true);}
+      if(data.exists&&(!remote||!Array.isArray(remote.homeVisits)))throw new Error('雲端資料不完整');
+      const hasLocalData=state.cases.length||state.visits.length||state.todos.length||(state.homeVisits||[]).length;
+      if(syncMeta.dirty){
+        if((syncMeta.revision??null)===(data.revision??null)){
+          renderNotionStatus();setNotionMessage('本機有尚未同步的變更，正在重試。');scheduleNotionSync();return true;
+        }
+        setNotionMessage('Notion 已有其他變更，本機資料仍保留。請先匯出備份並檢查差異。',true);
+        renderNotionStatus();syncBlocked=true;return false;
+      }
+      if(data.exists&&hasLocalData&&syncMeta.revision!==data.revision){
+        setNotionMessage('本機與 Notion 都有資料，已暫停自動覆蓋。請先匯出本機備份再處理差異。',true);renderNotionStatus();return false;
+      }
+      if(remote&&data.exists){
+        state=Object.assign(defaultState(),remote);
+        state.cases=state.cases.map(migrateCase);
+        syncMeta={revision:data.revision,dirty:String(data.revision||'').startsWith('legacy-'),sequence:syncMeta.sequence};state._sync=Object.assign({},syncMeta);
+        await dbPut();renderAll();setNotionMessage('已從 Notion 載入工作台資料。');
+      }else if(hasLocalData){
+        syncMeta.revision=data.revision??null;syncMeta.dirty=true;state._sync=Object.assign({},syncMeta);await dbPut();
+        await pushNotionState(true);
+      }else{syncMeta.revision=data.revision??null;}
       renderNotionStatus();return true;
     }catch(e){console.error(e);renderNotionStatus();setNotionMessage('讀取 Notion 資料失敗，本機資料未受影響。',true);return false;}
   }
   async function pushNotionState(silent=false){
     if(!notionSession){updateSyncDiagnostic('未送出（本機沒有 session）');if(!silent)setNotionMessage('尚未連結 Notion。',true);return false;}
+    if(notionSyncing)return false;
+    notionSyncing=true;
     renderNotionStatus(true);
     updateSyncDiagnostic('送出中…');
     try{
-      const payload={state:state};
+      const sequence=syncMeta.sequence;
+      const payload={state:state,baseRevision:syncMeta.revision};
       const r=await fetch(`${NOTION_CONNECTOR}/api/notion/state`,{method:'PUT',headers:notionHeaders(),body:JSON.stringify(payload),credentials:'omit'});
       const raw=await r.text();
       let data={};
@@ -539,31 +571,43 @@ function captureNotionSession(){
       if(!r.ok){
         const detail=data.message||data.error||`HTTP ${r.status}`;
         updateSyncDiagnostic(`HTTP ${r.status} / ${detail}`);
+        if(r.status===409||r.status===401)syncBlocked=true;
         throw new Error(detail);
       }
+      syncBlocked=false;
+      if(!data.revision)throw new Error('Connector 沒有回傳修訂版，無法確認資料完整寫入');
+      notionPageId=data.pageId||notionPageId;
+      syncMeta.revision=data.revision;
+      syncMeta.dirty=syncMeta.sequence!==sequence;
+      state._sync=Object.assign({},syncMeta);await dbPut();
       const syncedAt=data.savedAt||new Date().toISOString();
       if(typeof NOTION_LAST_SYNC_KEY!=='undefined'){
         localStorage.setItem(NOTION_LAST_SYNC_KEY,syncedAt);
       }
       updateSyncDiagnostic(`HTTP ${r.status} / 寫入成功`);
       renderNotionStatus();
-      if(!silent)setNotionMessage('Notion 同步完成。');
+      if(!silent||!syncMeta.dirty)setNotionMessage(syncMeta.dirty?'新變更仍在等待同步。':'資料已存入 Notion，表格可供閱讀。');
       return true;
     }catch(e){
       renderNotionStatus();
       if(!/HTTP \d+/.test(document.getElementById('cmDiagSync')?.textContent||''))updateSyncDiagnostic('網路/API 錯誤：'+(e?.message||String(e)));
-      if(!silent)setNotionMessage('Notion 同步失敗；資料已保留在本機，可稍後再按「立即同步」。',true);
+      setNotionMessage('同步失敗；資料已保留在本機，可稍後按「立即同步」。'+(e?.message||''),true);
       return false;
+    }finally{
+      notionSyncing=false;
+      renderNotionStatus();
+      if(syncMeta.dirty&&notionConnected&&!syncBlocked)scheduleNotionSync(30000);
     }
   }
 
-  function scheduleNotionSync(){
-    if(!notionConnected)return;clearTimeout(notionSyncTimer);notionSyncTimer=setTimeout(()=>pushNotionState(true),900);
+  function scheduleNotionSync(delay=1500){
+    if(!notionConnected||!syncMeta.dirty||syncBlocked)return;
+    clearTimeout(notionSyncTimer);notionSyncTimer=setTimeout(()=>pushNotionState(true),delay);
   }
   async function disconnectNotion(){
     if(!confirm('確定中斷這台裝置與 Notion 的連結嗎？本機資料不會被刪除。'))return;
     try{await fetch(`${NOTION_CONNECTOR}/api/notion/disconnect`,{method:'POST',headers:notionHeaders(),credentials:'omit'});}catch(e){}
-    localStorage.removeItem(NOTION_SESSION_KEY);notionSession='';notionConnected=false;notionWorkspace='';renderNotionStatus();setNotionMessage('已中斷 Notion 連結；目前改回本機模式。');
+    localStorage.removeItem(NOTION_SESSION_KEY);notionSession='';notionConnected=false;notionWorkspace='';notionPageId='';syncMeta.revision=null;renderNotionStatus();setNotionMessage('已中斷 Notion 連結；目前改回本機模式。');
   }
 
 
@@ -939,7 +983,7 @@ function captureNotionSession(){
   }
 
   async function init(){
-    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);if(!Array.isArray(state.homeVisits))state.homeVisits=[];state.cases=(state.cases||[]).map(migrateCase);const returnedFromNotion=captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected&&returnedFromNotion)await pullNotionState();showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
+    try{await openDB();const stored=await dbGet();if(stored)state=Object.assign(defaultState(),stored);syncMeta=Object.assign(syncMeta,state._sync||{});if(!Array.isArray(state.homeVisits))state.homeVisits=[];state.cases=(state.cases||[]).map(migrateCase);captureNotionSession();bind();document.getElementById('cmOpenDate').value=todayISO;document.getElementById('cmTodoDate').value=todayISO;renderAll();renderNotionStatus();const connected=await checkNotionStatus();if(connected){const pulled=await pullNotionState();if(pulled&&syncMeta.dirty)scheduleNotionSync();}showDisclaimer();}catch(e){console.error(e);document.getElementById('cmStorageError').classList.add('show');}
   }
   window.addEventListener('DOMContentLoaded',init);
 })();

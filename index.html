@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Longcare.Notes｜長照研究室</title>
-  <link rel="stylesheet" href="style.css?v=21.9" />
+  <link rel="stylesheet" href="style.css?v=24.0" />
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6H934JVD52"></script>
   <script>
@@ -213,7 +213,7 @@
     <div class="cm-subpage-head"><button class="cm-back-workspace" type="button">‹ 返回工作台</button><div><h3>個案管理</h3><p>先看個案總表；需要時再進入個案工作頁修改。</p></div></div>
     <section id="cmCases" class="panel cm-block">
       <div class="cm-case-toolbar"><input id="cmCaseSearch" placeholder="搜尋個案"><button id="cmOpenNewCase" class="primary" type="button">＋ 新增個案</button><button id="cmDownloadExcel" class="secondary" type="button">下載 Excel 範本</button><label class="secondary cm-file-label">匯入 Excel<input id="cmExcelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div>
-      <div class="cm-notion-strip"><div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span><strong> Notion</strong><small id="cmNotionDetail">連結後可同步到自己的 Notion 工作空間。</small></div><div class="cm-notion-actions"><button id="cmNotionConnect" class="secondary" type="button">連結 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><button id="cmNotionDisconnect" class="cm-link" type="button" hidden>中斷連結</button></div><div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div></div>
+      <div class="cm-notion-strip"><div><span id="cmNotionStatus" class="cm-notion-pill">尚未連結</span><strong> Notion</strong><small id="cmNotionDetail">連結後可同步到自己的 Notion 工作空間。</small></div><div class="cm-notion-actions"><button id="cmNotionConnect" class="secondary" type="button">連結 Notion</button><button id="cmNotionSync" class="secondary" type="button" hidden>立即同步</button><a id="cmNotionOpen" class="secondary" href="#" target="_blank" rel="noopener noreferrer" hidden>查看 Notion 表格</a><button id="cmNotionDisconnect" class="cm-link" type="button" hidden>中斷連結</button></div><div id="cmNotionMessage" class="cm-notion-message" aria-live="polite"></div></div>
       <div id="cmNewCasePanel" class="cm-newcase-card" hidden><div class="cm-newcase-title"><strong>新增個案</strong><button id="cmCloseNewCase" class="cm-link" type="button">收起</button></div><div class="cm-form-grid cm-case-form">
         <label>個案名／代稱<input id="cmCaseName"></label><label>CMS<select id="cmCaseCms"><option value="">未填</option><option value="1">CMS 1</option><option value="2">CMS 2</option><option value="3">CMS 3</option><option value="4">CMS 4</option><option value="5">CMS 5</option><option value="6">CMS 6</option><option value="7">CMS 7</option><option value="8">CMS 8</option></select></label>
         <label>身分別<select id="cmCaseIdentity"><option value="">未填</option><option>一般戶</option><option>中低收入戶</option><option>低收入戶</option></select></label><label>案別<select id="cmCaseType"><option value="general">一般新案</option><option value="transfer">轉案</option><option value="discharge">出備案</option></select></label>
@@ -358,7 +358,7 @@
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+'#casework');
   }catch(e){console.error('Notion session capture failed',e);}
 })();
-</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=23.1"></script>
+</script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="serviceData.js?v=17.7"></script><script src="script.js?v=17.7"></script><script src="caseManagerDashboard.js?v=24.0"></script>
 
 <script>
 (function(){
