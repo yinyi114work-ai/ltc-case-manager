@@ -523,6 +523,16 @@ function captureNotionSession(){
     const candidate=data?.state?.data||data?.state||data?.data?.data||data?.data||null;
     return candidate&&Array.isArray(candidate.cases)&&Array.isArray(candidate.visits)&&Array.isArray(candidate.todos)?candidate:null;
   }
+  function sameSyncData(local,remote){
+    const normalize=value=>{
+      if(Array.isArray(value))return value.map(normalize);
+      if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(key=>[key,normalize(value[key])]));
+      return value;
+    };
+    return ['cases','visits','todos','homeVisits','settings'].every(key=>
+      JSON.stringify(normalize(local[key]??(key==='settings'?{}:[])))===
+      JSON.stringify(normalize(remote[key]??(key==='settings'?{}:[]))));
+  }
   async function pullNotionState(){
     if(!notionConnected)return false;
     try{
@@ -536,6 +546,10 @@ function captureNotionSession(){
       if(syncMeta.dirty){
         if((syncMeta.revision??null)===(data.revision??null)){
           renderNotionStatus();setNotionMessage('本機有尚未同步的變更，正在重試。');scheduleNotionSync();return true;
+        }
+        if(remote&&String(data.revision||'').startsWith('legacy-')&&sameSyncData(state,remote)){
+          syncMeta.revision=data.revision;state._sync=Object.assign({},syncMeta);await dbPut();
+          renderNotionStatus();setNotionMessage('舊版 Notion 資料與本機一致，正在建立表格。');scheduleNotionSync();return true;
         }
         setNotionMessage('Notion 已有其他變更，本機資料仍保留。請先匯出備份並檢查差異。',true);
         renderNotionStatus();syncBlocked=true;return false;
