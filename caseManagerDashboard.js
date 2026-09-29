@@ -543,13 +543,17 @@ function captureNotionSession(){
       const remote=remoteStateFrom(data);
       if(data.exists&&(!remote||!Array.isArray(remote.homeVisits)))throw new Error('雲端資料不完整');
       const hasLocalData=state.cases.length||state.visits.length||state.todos.length||(state.homeVisits||[]).length;
-      if(data.exists&&hasLocalData&&remote&&String(data.revision||'').startsWith('legacy-')&&sameSyncData(state,remote)){
+      if(data.exists&&hasLocalData&&remote&&sameSyncData(state,remote)){
+        const legacy=String(data.revision||'').startsWith('legacy-');
         syncMeta.revision=data.revision;
-        syncMeta.dirty=true;
+        syncMeta.dirty=legacy;
         state._sync=Object.assign({},syncMeta);
         await dbPut();
-        renderNotionStatus();setNotionMessage('舊版 Notion 資料與本機一致，正在建立表格。');
-        scheduleNotionSync();return true;
+        syncBlocked=false;
+        renderNotionStatus();
+        setNotionMessage(legacy?'舊版 Notion 資料與本機一致，正在建立表格。':'已確認 Notion 與本機資料一致。');
+        if(legacy)scheduleNotionSync();
+        return true;
       }
       if(syncMeta.dirty){
         if((syncMeta.revision??null)===(data.revision??null)){
