@@ -543,13 +543,17 @@ function captureNotionSession(){
       const remote=remoteStateFrom(data);
       if(data.exists&&(!remote||!Array.isArray(remote.homeVisits)))throw new Error('雲端資料不完整');
       const hasLocalData=state.cases.length||state.visits.length||state.todos.length||(state.homeVisits||[]).length;
+      if(data.exists&&hasLocalData&&remote&&String(data.revision||'').startsWith('legacy-')&&sameSyncData(state,remote)){
+        syncMeta.revision=data.revision;
+        syncMeta.dirty=true;
+        state._sync=Object.assign({},syncMeta);
+        await dbPut();
+        renderNotionStatus();setNotionMessage('舊版 Notion 資料與本機一致，正在建立表格。');
+        scheduleNotionSync();return true;
+      }
       if(syncMeta.dirty){
         if((syncMeta.revision??null)===(data.revision??null)){
           renderNotionStatus();setNotionMessage('本機有尚未同步的變更，正在重試。');scheduleNotionSync();return true;
-        }
-        if(remote&&String(data.revision||'').startsWith('legacy-')&&sameSyncData(state,remote)){
-          syncMeta.revision=data.revision;state._sync=Object.assign({},syncMeta);await dbPut();
-          renderNotionStatus();setNotionMessage('舊版 Notion 資料與本機一致，正在建立表格。');scheduleNotionSync();return true;
         }
         setNotionMessage('Notion 已有其他變更，本機資料仍保留。請先匯出備份並檢查差異。',true);
         renderNotionStatus();syncBlocked=true;return false;
