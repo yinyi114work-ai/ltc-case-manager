@@ -892,15 +892,6 @@ function captureNotionSession(){
     await save();
   }
 
-  async function addCase(){
-    const name=document.getElementById('cmCaseName').value.trim();
-    const openDate=document.getElementById('cmOpenDate').value;
-    const prevHomeMonth=document.getElementById('cmPrevHomeMonth').value;
-    if(!name||!openDate)return alert('請至少填寫個案名與開案日期。');
-    state.cases.push({id:uid('case'),name,openDate,prevHomeMonth,status:'active',closedDate:'',closeReason:'',createdAt:new Date().toISOString()});cmTrack('case_added');
-    document.getElementById('cmCaseName').value='';document.getElementById('cmPrevHomeMonth').value='';
-    await save();
-  }
   async function closeCase(c){
     document.getElementById('cmCloseCaseName').textContent=c.name;
     document.getElementById('cmCloseDate').value=todayISO;
