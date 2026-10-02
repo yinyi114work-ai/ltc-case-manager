@@ -169,10 +169,10 @@
         <p class="small-note">個案、體況、服務細節、交班備註與待辦，皆在小工具內輸入及修改；Notion 負責資料整理、查閱與存取。更換裝置後先按「讀取雲端資料」，編輯完成後按「儲存至 Notion」（目前為手動同步）。資料衝突時會停止上傳。</p>
       </div>
       <div class="card" id="supervisorHandover" hidden>
-        <div class="supervisor-form-heading"><h3>📋 個案交班</h3><button id="handoverClose" type="button" class="icon-btn" aria-label="關閉交班">×</button></div>
-        <p id="handoverUpdated" class="small-note"></p>
-        <div class="grid-2"><label>個案稱呼／代號<input id="handoverName"></label><label>CMS<input id="handoverCms"></label><label>身分別<input id="handoverIdentity"></label><label>主責居服員<input id="handoverWorker"></label><label>本次服務日期<input id="handoverDate" type="date"></label><label>本次時段<input id="handoverTime" placeholder="09:00–10:00"></label><label>本次服務項目<input id="handoverServices" placeholder="例如：沐浴、家務"></label></div>
-        <label>已勾選交班事項與各項備註<textarea id="handoverChecklist"></textarea></label><label>個案體況<textarea id="handoverCondition"></textarea></label><label>服務細節<textarea id="handoverDetails"></textarea></label><label>交班備註<textarea id="handoverNotes"></textarea></label><label>本次臨時交代<textarea id="handoverTemporary"></textarea></label>
+        <div class="supervisor-form-heading"><h3>📋 產出交班單</h3><button id="handoverClose" type="button" class="icon-btn" aria-label="關閉交班">×</button></div>
+        <label>選擇本次服務時段<select id="handoverSlot"><option value="">自行設定本次時段</option></select></label><p class="small-note">先選服務日期，再選該日的時段。可修改本次時間、人員和勾選服務項目；不會更動固定排班。</p><p id="handoverUpdated" class="small-note"></p>
+        <div class="grid-2"><label>個案稱呼／代號<input id="handoverName"></label><label>CMS<input id="handoverCms"></label><label>身分別<input id="handoverIdentity"></label><label>主責居服員<input id="handoverWorker"></label><label>本次服務日期<input id="handoverDate" type="date"></label><input id="handoverTime" type="hidden"><label>本次開始<input id="handoverStart" type="time"></label><label>本次結束<input id="handoverEnd" type="time"></label><label>本次服務人員<input id="handoverAssigned"></label><label>其他服務項目<input id="handoverServices" placeholder="可補充其他項目"></label></div>
+        <fieldset><legend>本次要做的服務（可複選）</legend><div id="handoverServiceChecks" class="checkbox-grid"></div></fieldset><label>身高、體重與照顧資訊<textarea id="handoverCare" rows="8"></textarea></label><label>本次時段備註<textarea id="handoverSlotNote"></textarea></label><label>已勾選交班事項與各項備註<textarea id="handoverChecklist"></textarea></label><label>個案體況<textarea id="handoverCondition"></textarea></label><label>服務細節<textarea id="handoverDetails"></textarea></label><label>交班備註<textarea id="handoverNotes"></textarea></label><label>本次臨時交代<textarea id="handoverTemporary"></textarea></label>
         <p class="small-note">本次調整只用於這份交班；固定資料請至個案編輯更新。送出前確認內容及分享對象。</p>
         <div class="button-row"><button id="handoverPreview" type="button" class="secondary-btn">產生預覽</button><button id="handoverCopy" type="button" class="primary-btn">複製交班</button></div><label>交班預覽（可修改）<textarea id="handoverOutput" rows="12"></textarea></label>
       </div>
@@ -229,7 +229,7 @@
       </div>
 
       <div id="supervisorCaseView">
-        <div class="card"><strong>個案資料與交班</strong><p>按「＋新增個案」或個案的「編輯」，填寫個案體況、服務細節及交班備註。再按個案右側的「產出交班資訊」，預覽並複製給代班人員。內部備註不會自動帶入交班。</p></div>
+        <div class="card"><strong>個案資料與交班</strong><p>按「＋新增個案」填寫基本資料、照顧資訊與每週時段；儲存後會直接開啟交班單。既有個案按「個案資料／交班事項」修改，或按「產出交班單」選擇本次日期、時段及服務，預覽並複製給代班人員。內部備註不會自動帶入交班。</p></div>
         <div class="supervisor-month-nav card">
           <button id="supervisorTrackingPrev" class="icon-btn" type="button" aria-label="上個月">‹</button>
           <div><strong id="supervisorTrackingMonthLabel"></strong><span>個案追蹤</span></div>
@@ -254,10 +254,18 @@
             <label>開始服務日<input id="supervisorCaseStartDate" type="date"></label>
             <label>主責居服員<input id="supervisorCaseWorker" maxlength="60" placeholder="例如：陳小美"></label>
             <label>服務狀態<select id="supervisorCaseStatus"><option value="active">服務中</option><option value="paused">暫停服務</option><option value="closed">已結案</option></select></label>
-            <div class="grid-full"><h4>每週服務時間</h4><p class="small-note">點選有服務的星期，再填寫該日的開始與結束時間。各日可以使用不同時段。</p><div id="supervisorWeekSchedule" class="supervisor-week-schedule"></div></div>
+            <div class="grid-full"><h4>每週服務時間</h4><p class="small-note">點選有服務的星期，再填寫該日的開始與結束時間。同一天可新增多個時段，分別指定居服員、服務項目與備註。</p><div id="supervisorWeekSchedule" class="supervisor-week-schedule"></div></div>
             <label class="grid-full">其他時段／排班補充<input id="supervisorCaseSchedule" maxlength="1000" placeholder="例如：隔週服務、臨時時段，或同一天的第二個時段"><span class="field-hint">舊版服務時間會保留在這裡，確認勾選時段後可自行整理。</span></label>
             <label>最近一次家訪日<input id="supervisorCaseLastVisit" type="date"><span class="field-hint">家訪以月份計算，例如 115/05/10 完成，下次應家訪月份為 115/08</span></label>
-            <div class="grid-full"><h4>交班事項（可複選）</h4><p class="small-note">勾選需要交班的事項，並在該項備註填寫實際協助方式；未勾選的備註仍會保留，但不帶入交班。</p><div id="supervisorHandoverChecks" class="checkbox-grid"></div></div>
+            <div class="grid-full"><h4>個案照顧資訊</h4><p class="small-note">以下會帶入交班單；不確定的資料可以留白。</p></div>
+<label>身高（cm）<input id="care_height" type="number" min="1" step="0.1"></label><label>體重（kg）<input id="care_weight" type="number" min="0.1" step="0.1"></label>
+<label>移位方式<select id="care_transfer"><option value="">未填</option><option>可自行移位</option><option>需在旁看視</option><option>一人協助</option><option>兩人協助</option><option>使用移位機</option><option>其他（請補充）</option></select></label>
+<label>移位補充<textarea id="care_transferNote" maxlength="1000" placeholder="床到輪椅、協助步驟及注意事項"></textarea></label>
+<label>行動與輔具<textarea id="care_mobility" maxlength="1000" placeholder="助行器、輪椅、行走距離等"></textarea></label>
+<label>溝通與認知<textarea id="care_cognition" maxlength="1000" placeholder="理解、表達、聽力、常用語言等"></textarea></label>
+<label>情緒狀況<textarea id="care_emotion" maxlength="1000" placeholder="平穩、焦慮、容易生氣，以及常見觸發情境"></textarea></label>
+<label>溝通／安撫方式<textarea id="care_comfort" maxlength="1000" placeholder="有效的說法、喜好及應避免的互動"></textarea></label>
+<label class="grid-full">其他照顧注意事項<textarea id="care_careOther" maxlength="3000" placeholder="飲食吞嚥、疼痛、皮膚狀況等"></textarea></label><div class="grid-full"><h4>交班事項（可複選）</h4><p class="small-note">勾選需要交班的事項，並在該項備註填寫實際協助方式；未勾選的備註仍會保留，但不帶入交班。</p><div id="supervisorHandoverChecks" class="checkbox-grid"></div></div>
             <label class="grid-full">個案體況<textarea id="conditionField" maxlength="3000" placeholder="溝通、行走移位、輔具、協助程度及近期變化"></textarea></label>
             <label class="grid-full">服務細節<textarea id="serviceDetailsField" maxlength="3000" placeholder="服務項目、操作方式、順序、用品位置及個案習慣"></textarea></label>
             <label class="grid-full">交班備註<textarea id="handoverNoteField" maxlength="3000" placeholder="家屬交代、入家方式、注意事項及需回報的事情"></textarea></label>

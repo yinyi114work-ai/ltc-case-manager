@@ -1,14 +1,32 @@
 // 居督專用：與個管版使用不同儲存鍵、Worker 及 Notion 授權。
+let supervisorHandoverCase=null;
+function renderHandoverServices(selected=[]){
+  $('handoverServiceChecks').innerHTML=[...new Set([...SUPERVISOR_SERVICE_ITEMS,...selected])].map(label=>`<label class="check-item"><input type="checkbox" value="${supervisorEscape(label)}" ${selected.includes(label)?'checked':''}>${supervisorEscape(label)}</label>`).join('');
+}
+function refreshHandoverSlots(){
+  const c=supervisorHandoverCase;if(!c)return;
+  const date=v('handoverDate');const day=date?(new Date(date+'T12:00:00').getDay()+6)%7:null;
+  $('handoverSlot').innerHTML='<option value="">自行設定本次時段</option>'+c.serviceWeekSchedule.map((x,i)=>({x,i})).filter(({x})=>x.checked&&(day===null||x.day===day)).map(({x,i})=>`<option value="${i}">${supervisorEscape(SUPERVISOR_WEEKDAYS[x.day]+' '+(x.start||'未填')+'–'+(x.end||'未填')+' '+(x.worker||c.homeCareWorker||''))}</option>`).join('');
+  $('handoverStart').value='';$('handoverEnd').value='';$('handoverAssigned').value=c.homeCareWorker||'';$('handoverSlotNote').value='';$('handoverServices').value='';renderHandoverServices();previewSupervisorHandover();
+}
+function chooseHandoverSlot(){
+  const index=v('handoverSlot'),x=index!==''?supervisorHandoverCase?.serviceWeekSchedule[Number(index)]:null;
+  $('handoverStart').value=x?.start||'';$('handoverEnd').value=x?.end||'';$('handoverAssigned').value=x?.worker||supervisorHandoverCase?.homeCareWorker||'';$('handoverSlotNote').value=x?.note||'';$('handoverServices').value='';renderHandoverServices(x?.services||[]);previewSupervisorHandover();
+}
 function openSupervisorHandover(id){
   const c=supervisorCases.find(c=>c.id===id);if(!c)return;
+  supervisorHandoverCase=normalizeSupervisorCase(c);
   $('supervisorHandover').hidden=false;
   $('handoverUpdated').textContent='個案資料最後更新：'+new Date(c.updatedAt).toLocaleString('zh-TW');
-  const values={Name:c.name,Cms:c.cms?'CMS '+c.cms:'',Identity:c.identity,Worker:c.homeCareWorker,Checklist:supervisorChecklistText(c.handoverItems),Date:'',Time:c.serviceSchedule,Services:'',Condition:c.condition,Details:c.serviceDetails,Notes:c.handoverNote,Temporary:'',Output:''};
+  const values={Name:c.name,Cms:c.cms?'CMS '+c.cms:'',Identity:c.identity,Worker:c.homeCareWorker,Checklist:supervisorChecklistText(c.handoverItems),Care:supervisorCareText(c),SlotNote:'',Assigned:c.homeCareWorker,Start:'',End:'',Date:supervisorDateStr(new Date()),Time:'',Services:'',Condition:c.condition,Details:c.serviceDetails,Notes:c.handoverNote,Temporary:'',Output:''};
   Object.entries(values).forEach(([key,value])=>$('handover'+key).value=value||'');
-  previewSupervisorHandover();$('supervisorHandover').scrollIntoView({behavior:'smooth',block:'start'});
+  refreshHandoverSlots();$('supervisorHandover').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function previewSupervisorHandover(){
-  const entries=[['個案',v('handoverName')],['CMS',v('handoverCms')],['身分別',v('handoverIdentity')],['主責居服員',v('handoverWorker')],['交班事項',v('handoverChecklist')],['服務日期',v('handoverDate')],['服務時段',v('handoverTime')],['服務項目',v('handoverServices')],['個案體況',v('handoverCondition')],['服務細節',v('handoverDetails')],['交班備註',v('handoverNotes')],['本次臨時交代',v('handoverTemporary')]];
+  const start=v('handoverStart'),end=v('handoverEnd');
+  $('handoverTime').value=start||end?(start||'未填')+'–'+(end||'未填'):'';
+  const services=[...document.querySelectorAll('#handoverServiceChecks input:checked')].map(x=>x.value);if(v('handoverServices'))services.push(v('handoverServices'));
+  const entries=[['個案',v('handoverName')],['CMS',v('handoverCms')],['身分別',v('handoverIdentity')],['主責居服員',v('handoverWorker')],['交班事項',v('handoverChecklist')],['服務日期',v('handoverDate')],['服務時段',v('handoverTime')],['本次服務人員',v('handoverAssigned')],['服務項目',services.join('、')],['身高、體重與照顧資訊',v('handoverCare')],['時段備註',v('handoverSlotNote')],['個案體況',v('handoverCondition')],['服務細節',v('handoverDetails')],['交班備註',v('handoverNotes')],['本次臨時交代',v('handoverTemporary')]];
   $('handoverOutput').value='📋 個案交班\n'+entries.filter(([,val])=>val).map(([label,val])=>label+'：'+val).join('\n');
 }
 (()=>{
@@ -34,7 +52,10 @@ function previewSupervisorHandover(){
   async function run(action){if(busy)return;busy=true;document.querySelectorAll('#supervisorSyncPanel button').forEach(b=>b.disabled=true);try{await action();}catch(e){status(e.name==='AbortError'?'連線逾時，本機資料已保留；請先讀取雲端確認上次是否完成':e.message);}finally{busy=false;document.querySelectorAll('#supervisorSyncPanel button').forEach(b=>b.disabled=false);}}
   $('handoverClose').onclick=()=>$('supervisorHandover').hidden=true;
   $('handoverPreview').onclick=previewSupervisorHandover;
-  $('handoverCopy').onclick=()=>{if(!v('handoverOutput'))previewSupervisorHandover();copyText(v('handoverOutput'),'交班資訊');};
+  $('handoverSlot').onchange=chooseHandoverSlot;
+  $('handoverDate').onchange=refreshHandoverSlots;
+  $('handoverServiceChecks').onchange=previewSupervisorHandover;
+  $('handoverCopy').onclick=()=>{const start=v('handoverStart'),end=v('handoverEnd');if(!start||!end||end<=start){showToast('請填寫完整本次時段，結束須晚於開始');return;}if(!v('handoverOutput'))previewSupervisorHandover();copyText(v('handoverOutput'),'交班資訊');};
   document.querySelectorAll('#supervisorHandover input, #supervisorHandover textarea:not(#handoverOutput)').forEach(el=>el.addEventListener('input',previewSupervisorHandover));
   window.addEventListener('supervisor-data-changed',()=>{dirty=true;status(session?'本機資料已變更，尚未儲存至 Notion':'本機資料已儲存，尚未連結 Notion');});
   $('supervisorJsonBackup').onclick=backup;
